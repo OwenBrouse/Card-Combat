@@ -39,6 +39,9 @@ p2Hand = []
 p1MoveCounts = []
 p2MoveCounts = []
 
+#FUNCTIONS
+#------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 def Draw(numOfCards, p1H, p2H):
   "Draws a number of cards (depending on their existing hand) to reset each player's hand to 10."
   for i in range(numOfCards - len(p1Hand)):
@@ -196,6 +199,9 @@ def Outcomes(c1, c2):
   if p2.stunned == 1:
     print(p2.name, 'is stunned!')
   print('')  
+
+#GAMEPLAY
+#-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 while p1.health > 0 and p2.health > 0:
   p1MoveCounts, p2MoveCounts, p1Hand, p2Hand = Draw(10, p1Hand, p2Hand)
