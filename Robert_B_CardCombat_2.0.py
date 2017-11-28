@@ -26,8 +26,8 @@ class Fighter:
     self.yPos = y
     self.stance = stance
     
-p1 = Fighter(10, 0, str(input("Enter Player 1's Name:")), 0, 0, 0)
-p2 = Fighter(10, 0, str(input("Enter Player 2's Name:")), 0, 0, 0)
+p1 = Fighter(20, 0, str(input("Enter Player 1's Name:")), 0, 0, 0)
+p2 = Fighter(20, 0, str(input("Enter Player 2's Name:")), 0, 0, 0)
 punchDmg = 1
 kickDmg = 2
 choices = [[1,2,3,4],['Punch','Kick','Block Kick','Hold']]
@@ -120,7 +120,7 @@ def Input(numOfTurns, p1H, p2H):
       for i in range(numOfTurns):
         if p2T[i] in p2H:
           print('Move verified!')
-          p2H.pop(p2H.index(p1T[i]))
+          p2H.pop(p2H.index(p2T[i]))
           print(p2H)
         elif p2T[i] == 4:
           print('Move verified!')
