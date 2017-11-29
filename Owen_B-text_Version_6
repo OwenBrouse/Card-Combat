@@ -526,7 +526,7 @@ if checkValues()=='TRUE':
 		print(playerList[players].name, len(playerList[players].deck),sep=(' - '),end=('.....................'+"\n"))	
 	for players in range(numberOfPlayers):
 		if len(playerList[players].deck) == 0:
-			print(playerList[players].name + 'loses')
+			print(playerList[players].name + ' loses')
 else:
 	print('Some values in your game are corrupted')
 
