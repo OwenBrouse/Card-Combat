@@ -118,16 +118,19 @@ class Card:
     def flip (self):
         "visualy filps the card over"
         flipSpeed = 4
-        if self.flipCount > 999:
+        
+        if self.flipCount > 999: #unflipping
             self.width += flipSpeed
             self.flipCount -= 1000
             if self.flipCount == 0:
                 self.flipSelect = False
-        elif self.width > flipSpeed:
+                
+        elif self.width > flipSpeed: #flip
             self.width -= flipSpeed
             self.flipCount += 1
-        elif self.width < flipSpeed+1:
-            self.flipCount *= 1000
+            
+        elif self.width < flipSpeed+1: #is the flip halfway
+            self.flipCount *= 1000 
             if self.Img == -1:
                 self.Img = self.Id
             else:
@@ -140,14 +143,14 @@ class Card:
 ##for numberOfCard in range(len(cards)):        
 ##    cards[numberOfCard].moveTo((77*(numberOfCard%13))+38,(116*(numberOfCard//13))+57)	
        
-temp = Card(40,60,70,111,-3)	
+temp = Card(40,60,70,111,-3) #make health/deck card
 cards.append(temp)
 cards[0].Img = cards[0].Id
 
-temp = Button(850,65,250,75,buttonText[0],buttonTextColour[0],buttonBoxColour[0])	
+temp = Button(850,65,250,75,buttonText[0],buttonTextColour[0],buttonBoxColour[0]) #make button
 buttons.append(temp)
 
-for new in range (10):
+for new in range (10): #ten random cards
     temp = Card(40,60,70,111,random.randint(1,3))	
     cards.append(temp)
     cards[len(cards)-1].moveTo(275+(((len(cards)-2)%5)*120),300+(((len(cards)-2)//5)*180))
@@ -155,9 +158,11 @@ for new in range (10):
 
 while True:
     
-    DISPLAYSURF.blit(backPhoto, (0,-50))
-    #DISPLAYSURF.fill((255,175,0))
-    for inputNumber in range(5):
+    DISPLAYSURF.blit(backPhoto, (0,-50))    #image
+    #DISPLAYSURF.fill((255,175,0))          #a solid colour
+
+    
+    for inputNumber in range(5): #draw 5 rectangles
         pygame.draw.rect(DISPLAYSURF, (0,0,0),(80+(90*inputNumber),0,80,120))
 
         textFont = pygame.font.Font('freesansbold.ttf', 32)
@@ -192,22 +197,22 @@ while True:
         elif event.type == MOUSEBUTTONUP:
             mouseX, mouseY = event.pos
             for card in range(len(cards)):
-                if cards[card].selected == True:
+                if cards[card].selected == True: #decting if card is in a box
                     for fakeInputNumber in range(5):
                         if mouseX >(80+(90*fakeInputNumber)) and mouseX <(160+(90*fakeInputNumber))and mouseY < 120 and theChosenCards[fakeInputNumber] == 0:
                             cards[card].goTo(120+(90*fakeInputNumber),60)
                             theChosenCards[fakeInputNumber] = cards[card].Id
-                cards[card].selected = False
+                cards[card].selected = False #unselect ALL THE CARDS WHAAAAAHAAAAHAAAAAAAAAAAAAAA
                             
                 
         elif event.type == MOUSEBUTTONDOWN:
             mouseX, mouseY = event.pos
             for card in range(1,len(cards)):
                 if cards[card].clicked(mouseX,mouseY)==True:
-                    for fakeInputNumber in range(5):
+                    for fakeInputNumber in range(5): # is this card in a box if so remove it's value
                         if cards[card].x == 120+(90*fakeInputNumber) and cards[card].y == 60:
                             theChosenCards[fakeInputNumber] = 0
-                    cards[card].selected = True
+                    cards[card].selected = True #selects dat card
                     break
             for button in range(len(buttons)):
                 buttons[button].clicked(mouseX,mouseY)
