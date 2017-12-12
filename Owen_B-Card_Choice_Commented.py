@@ -4,6 +4,8 @@ from pygame.locals import *
 pygame.init()
 FPS = 30 
 fpsClock = pygame.time.Clock()
+DISPLAYSURF = pygame.display.set_mode((1000, 700), 0, 32)
+pygame.display.set_caption('Card Comabat TESTS')
 
 #Background assetes
 background = [0,0,0]
@@ -14,6 +16,7 @@ backPhoto = pygame.transform.scale(backPhoto,(1000,750))
 cards = []
 theChosenCards=[0,0,0,0,0]
 cardImage = [pygame.image.load('Card_Standing.png'),pygame.image.load('Card_Punch.png'),pygame.image.load('Card_Kick.png'),pygame.image.load('Card_Dodge.png'),pygame.image.load('Card_Health.png'),pygame.image.load('Card_Front.png'),pygame.image.load('Card_Back.png')]
+still = 0
 
 # button value storage
 buttons = []
@@ -21,9 +24,7 @@ buttonText       = ['Done'       ]
 buttonTextColour = [[0  ,0  ,0  ]]
 buttonBoxColour  = [[255,255,255]]
 
-
-DISPLAYSURF = pygame.display.set_mode((1000, 700), 0, 32)
-pygame.display.set_caption('Card Comabat TESTS')
+gameMode = 0
 
 class Button:
     "a clickable rectangle plus text"
@@ -50,8 +51,8 @@ class Button:
         "detects if the mouse cliked plus what button it is"
         if xPos >self.x-(self.width/2) and xPos < (self.x-(self.width/2))+self.width:
             if yPos > self.y-(self.heigth/2) and yPos < (self.y-(self.heigth/2))+self.heigth:
-                if self.text == 'Done':
-                    print(theChosenCards)
+                return self.text
+
 class Card:
     "the object of the cards (size,location,image,movement)"
     def __init__(self, x, y, width, heigth,Id):
@@ -135,15 +136,8 @@ class Card:
                 self.Img = self.Id
             else:
                 self.Img = -1
-
-
-##for numberOfCard in range(78):        
-##    temp = Card(400,400,70,111)	
-##    cards.append(temp)
-##for numberOfCard in range(len(cards)):        
-##    cards[numberOfCard].moveTo((77*(numberOfCard%13))+38,(116*(numberOfCard//13))+57)	
        
-temp = Card(40,60,70,111,-3) #make health/deck card
+temp = Card(40,65,70,111,-3) #make health/deck card
 cards.append(temp)
 cards[0].Img = cards[0].Id
 
@@ -156,9 +150,9 @@ for new in range (10): #ten random cards
     cards[len(cards)-1].moveTo(275+(((len(cards)-2)%5)*120),300+(((len(cards)-2)//5)*180))
 
 
-while True:
+while gameMode == 0 or still != len(cards)-1:
     
-    DISPLAYSURF.blit(backPhoto, (0,-50))    #image
+    DISPLAYSURF.blit(backPhoto, (0,-40))    #image
     #DISPLAYSURF.fill((255,175,0))          #a solid colour
 
     
@@ -174,15 +168,18 @@ while True:
     for drawButton in range(len(buttons)):
         buttons[drawButton].display()
    
-    for drawCard in range(len(cards)):
+    still = 0
+    for drawCard in range(1,len(cards)):
         if cards[drawCard].computerSelect == True:
             if (round(cards[drawCard].x) != cards[drawCard].destX or round(cards[drawCard].y) != cards[drawCard].destY):
                 cards[drawCard].getMoving()
         if cards[drawCard].flipSelect == True:
             cards[drawCard].flip()
-
+        if cards[drawCard].flipSelect == False and cards[drawCard].selected == False and cards[drawCard].computerSelect == False:
+            still += 1 #counts the ammout of cards doing nothing
+            
         cards[drawCard].display()
-
+    cards[0].display()
 
     for event in pygame.event.get():
         if event.type == QUIT:
@@ -199,10 +196,13 @@ while True:
             for card in range(len(cards)):
                 if cards[card].selected == True: #decting if card is in a box
                     for fakeInputNumber in range(5):
-                        if mouseX >(80+(90*fakeInputNumber)) and mouseX <(160+(90*fakeInputNumber))and mouseY < 120 and theChosenCards[fakeInputNumber] == 0:
-                            cards[card].goTo(120+(90*fakeInputNumber),60)
-                            theChosenCards[fakeInputNumber] = cards[card].Id
-                cards[card].selected = False #unselect ALL THE CARDS WHAAAAAHAAAAHAAAAAAAAAAAAAAA
+                        if mouseY < 120 :
+                            if mouseX >(80+(90*fakeInputNumber)) and mouseX <(160+(90*fakeInputNumber))and theChosenCards[fakeInputNumber] == 0:
+                                cards[card].goTo(120+(90*fakeInputNumber),60)
+                                theChosenCards[fakeInputNumber] = cards[card].Id
+                            elif fakeInputNumber == 0: # keep unwanted cards off the bars
+                                cards[card].y = 200
+                cards[card].selected = False #unselect ALL THE CARDS 
                             
                 
         elif event.type == MOUSEBUTTONDOWN:
@@ -215,13 +215,24 @@ while True:
                     cards[card].selected = True #selects dat card
                     break
             for button in range(len(buttons)):
-                buttons[button].clicked(mouseX,mouseY)
+                clickedButton = buttons[button].clicked(mouseX,mouseY)
+                if clickedButton == 'Done':
+                    print(theChosenCards)
+                    gameMode = 1 #move to the next part of the game
+                    still = 0
+                    for all in range(1,len(cards)):#move the card into respective piles
+                        if cards[all].y < 65:
+                            cards[all].moveTo(120,65) 
+                        else:
+                            cards[all].moveTo(40,65) 
                     
 ##        elif event.type == KEYUP:
+##            print(gameMode,still)
                     
                         
                     
             
     pygame.display.update()
     fpsClock.tick(FPS)
-
+pygame.quit()
+sys.exit()
