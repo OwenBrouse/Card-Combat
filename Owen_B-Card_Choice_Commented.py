@@ -90,11 +90,17 @@ class Card:
         self.destY = yy
         self.speed = round(((math.sqrt((self.destX - self.x)**2 + (self.destY - self.y)**2))/50)+1)
 
-        ByX = ((self.destX-self.x))/self.speed
-        ByY = ((self.destY-self.y))/self.speed
-
-        self.moveByX = ByX
-        self.moveByY = ByY
+        if self.destX != self.x:
+            self.moveByX = ((self.destX-self.x))/self.speed
+        else:
+            self.moveByX = 1
+            self.x -=self.speed
+            
+        if self.destY != self.y:
+            self.moveByY = ((self.destY-self.y))/self.speed
+        else:
+            self.moveByY = 1
+            self.y -=self.speed
 
         self.computerSelect = True
 
@@ -108,7 +114,7 @@ class Card:
         self.x += self.moveByX
         self.y += self.moveByY
         if (round(self.x) == self.destX or round(self.y) == self.destY):
-            self.computerSelect = False# just a shortcut for now
+            self.computerSelect = False
 
     def clicked (self,mX,mY)  :
         "deteminds if the card has been clicked"
@@ -150,7 +156,11 @@ for numPlayer in range(2):
     for new in range (10): #ten random cards
         temp = Card(40+(920*numPlayer),60,70,111,random.randint(1,3))	
         cards.append(temp)
-        cards[len(cards)-1].moveTo(275+(((len(cards)-2)%5)*120),300+(((len(cards)-2)//5)*180))
+    cards[len(cards)-1].moveTo(275+(((len(cards)-2)%5)*120),300+(((len(cards)-2)//5)*180))
+##    for new in range (30): #ten random cards
+##        temp = Card(40+(920*numPlayer),60,70,111,random.randint(1,3))	
+##        cards.append(temp)
+##        cards[len(cards)-1].moveTo(40+(((len(cards)-2)%10)*100),200+(((len(cards)-2)//10)*200))
 
 
     while gameMode == 0 or still != len(cards)-1:
