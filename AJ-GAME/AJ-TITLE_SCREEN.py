@@ -5,7 +5,7 @@ FPS = 30
 fpsClock = pygame.time.Clock()
 DISPLAYSURF = pygame.display.set_mode((1000, 700), 0, 32)
 pygame.display.set_caption('Card Comabat TITLE SCREEN')
-backPhoto = pygame.image.load('Card_Choice_Background.png')
+backPhoto = pygame.image.load('Title_Test.png')
 backPhoto = pygame.transform.scale(backPhoto,(1000,750))
 buttons = []
 class Button:
@@ -35,16 +35,14 @@ class Button:
             if yPos > self.y-(self.heigth/2) and yPos < (self.y-(self.heigth/2))+self.heigth:
                 return self.text
            
-temp = Button(500,350,200,75,"PENIS",[0,0,0],[255,255,0])
+temp = Button(480,350,332,110,"PLAY",[0,0,0],[0,0,0])
 buttons.append(temp)
-temp = Button(500,450,200,75,"ASS",[0,255,0],[255,0,255])
-buttons.append(temp)
-temp = Button(500,550,650,75,"BLACK DAHLIA MURDER",[255,0,0],[255,255,255])
+temp = Button(480,580,332,110,"QUIT",[0,0,0],[0,0,0])
 buttons.append(temp)
 
 
 while True:
-    DISPLAYSURF.blit(backPhoto, (0,-40))
+    
 
     for allButtons in range(len(buttons)):
         buttons[allButtons].display()
@@ -52,22 +50,19 @@ while True:
     
     
     for event in pygame.event.get():
-            if event.type == QUIT:
-                 pygame.quit()
-                 sys.exit()
-                 
+        
             if event.type == MOUSEBUTTONDOWN:
                 mouseX, mouseY = event.pos
                         
                 for button in range(len(buttons)):
                     clickedButton = buttons[button].clicked(mouseX,mouseY)
-                    if clickedButton == 'PENIS':
-                        del buttons[0]
-                    if clickedButton == 'ASS':
-                        del buttons[1]
-                    if clickedButton == 'BLACK DAHLIA MURDER':
-                        del buttons[2]
-                                
+                    if clickedButton == 'PLAY':
+                        print("PLAY")
+                    if clickedButton == 'QUIT':
+                        pygame.quit()
+                        sys.exit()
+
+    DISPLAYSURF.blit(backPhoto, (0,0))
     pygame.display.update()
     fpsClock.tick(FPS)
 
