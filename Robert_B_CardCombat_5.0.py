@@ -11,22 +11,20 @@ fpsClock = pygame.time.Clock()
 DISPLAYSURF = pygame.display.set_mode((1000, 700), 0, 32)
 pygame.display.set_caption('CardCombat v5.0')
 
-WHITE = (255,255,255)
-
-DISPLAYSURF.fill(WHITE)
-
 class Fighter:
+  "The player class."
   def __init__(self, health, stunned, name, xPos, yPos, stance):
     self.health = health
     self.stunned = stunned
     self.name = name
     self.xPos = xPos
     self.yPos = yPos
-    self.stance = stance
-    self.locked = False
+    self.stance = stance #What stance the fighter is in (standing, punching, etc.)
+    self.stanceName = stances[self.stance]
+    self.stanceImg = stanceImgs[self.stance]
   
   def Damage(self, dmg):
-    'Damages the recipient.'
+    "Damages the player's health by the amount of damage received."
     self.health -= dmg
     
   def Stun(self, stun):
@@ -37,8 +35,12 @@ class Fighter:
     self.xPos = x
     self.yPos = y
     self.stance = stance
+    self.stanceName = stances[self.stance]
+    self.stanceImg = stanceImgs[self.stance]
+    
 
 class Card:
+  "The card used in the selection screens."
   def __init__(self, xPos, yPos, isFlipped, atkType, width, height):
     self.xPos = xPos
     self.yPos = yPos
@@ -94,8 +96,55 @@ class Card:
     distY = yDest - self.yPos
     incx = distX / 10
     incy = distY / 10
+    self.computerSelect = True
     return incx, incy
 
+  def move(self, incX, incY, xDest, yDest):
+    if self.xPos != xDest and self.yPos != yDest:
+      self.xPos += incX
+      self.yPos += incY
+    else:
+      self.computerSelect = False
+
+  def moveToSetPos(x, y):
+    self.xPos = x
+    self.yPos = y
+
+    
+class DisplayCard:
+  "The card that will be displayed in the combat screen."
+  def __init__(self,xpos,ypos,width,height,atkType):
+    self.xpos = xpos
+    self.ypos = ypos
+    self.width = width
+    self.height = height
+    self.atkType = atkType
+    self.frontImg = cardImages[0]
+    self.backImg = cardImages[1]
+    self.img = self.backImg
+    self.flipCount = 0
+    
+  def flip (self):
+        "Visually flips the card over"
+        flipSpeed = 4
+        
+        if self.flipCount > 999: #unflipping
+            self.width += flipSpeed
+            self.flipCount -= 1000
+            if self.flipCount == 0:
+                self.flipSelect = False
+                
+        elif self.width > flipSpeed: #flip
+            self.width -= flipSpeed
+            self.flipCount += 1
+            
+        elif self.width < flipSpeed+1: #is the flip halfway
+            self.flipCount *= 1000 
+            if self.Img == -1:
+                self.Img = self.Id
+            else:
+                self.Img = -1
+  
 class Button:
     "a clickable rectangle plus text"
     def __init__(self, x, y, width, height, text, textColour, boxColour):
@@ -123,18 +172,23 @@ class Button:
             if yPos > self.y-(self.height/2) and yPos < (self.y-(self.height/2))+self.height:
                 return self.text    
 
+#BECAUSE OWEN WANTED IT
+intensity = 100
+
 #PLAYERS
-p1 = Fighter(20, 0, str(input("Enter Player 1's Name:")), 0, 0, 0)
-p2 = Fighter(20, 0, str(input("Enter Player 2's Name:")), 0, 0, 0)
+p1 = Fighter(20 * intensity, 0, 'Robert', 0, 0, 0)
+p2 = Fighter(20 * intensity, 0, 'Owen', 0, 0, 0)
 
 #COMBAT
-punchDmg = 1
-kickDmg = 2
-flyingKickDmg = 4
+punchDmg = 1 * intensity
+kickDmg = 2 * intensity
+flyingKickDmg = 4 * intensity
 dmgMult1 = 1
 condTurns1 = 0
 dmgMult2 = 1
 condTurns2 = 0
+stanceImgs = [pygame.image.load('Standing.png'),pygame.image.load('Punch.png'),pygame.image.load('Kick.png'),pygame.image.load('Block Kick.png'),pygame.image.load('Taunt.png'),pygame.image.load('Charging.png'),pygame.image.load('Flying Kick.png'),pygame.image.load('Stun.png'),pygame.image.load('Dead.png')]
+stances = ['Standing', 'Punch', 'Kick', 'Block Kick', 'Taunt', 'Charging', 'Flying Kick', 'Stunned', 'Dead']
 
 #CARD & CHOICES
 choices = [[1,2,3,4,5,6],['Punch','Kick','Block Kick','Taunt','Charging','Flying Kick']]
@@ -159,9 +213,10 @@ p2Turns = []
 
 #SCREENS
 screens = ['menu', 'settings', 'p1cardchoice', 'p2cardchoice', 'game', 'how2play']
-currScreen = 0
-currBg = 0
-backgrounds = [pygame.image.load('Fight_Background.png'), pygame.image.load('Card_Choice_Background.png')]
+screen = 0
+fightBackground = pygame.image.load('Fight_Background.png')
+cardBackground = pygame.image.load('Card_Choice_Background.png')
+background = fightBackground
 
 #BUTTONS
 buttons = []
@@ -209,7 +264,6 @@ def Draw(numOfCards, p1H, p2H):
   
 
 def Input(numOfTurns, p1H, p2H):
-  
   #Picks the moves.
   p1T = []
   savedHand1 = []
@@ -266,9 +320,12 @@ def Input(numOfTurns, p1H, p2H):
       print('You did not pick five moves.')
     else:
       for i in range(numOfTurns):
-        if p2T[i] in p2H or p2T[i] == 0:
+        if p2T[i] in p2H:
           print('Move verified!')
           p2H.pop(p2H.index(p2T[i]))
+          print(p2H)
+        elif p2T[i] == 0:
+          print('Move verified!')
           print(p2H)
         else:
           print('Your selected card was not in your hand. Try again.')
@@ -279,6 +336,16 @@ def Input(numOfTurns, p1H, p2H):
   #Spacer.
   for i in range(90):
     print('')
+
+  for card in range(p1T):
+    for x in range(p1Cards):
+      if card == p1Cards[x].atkType:
+        p1Cards.pop(x)
+  for card in range(p2T):
+    for x in range(p2Cards):
+      if card == p2Cards[x].atkType:
+        p2Cards.pop(x)
+  
   
   return p1T, p2T, p1H, p2H
 
@@ -530,26 +597,23 @@ def Outcomes(c1, c2, cond1, cond2, dmgM1, dmgM2, turn):
   return cond1, cond2, dmgM1, dmgM2
   
 while True:  
-  if p1.health > 0 and p2.health > 0:
-    p1MoveCounts, p2MoveCounts, p1Hand, p2Hand = Draw(10, p1Hand, p2Hand)
-    if p1.locked == True and p2.locked == True:
-      currBg = 0
-      DISPLAYSURF.blit(backgrounds[currBg])
-      p1Turns, p2Turns, p1Hand, p2Hand = Input(turns, p1Hand, p2Hand)
-      for i in range(turns):
-        condTurns1, condTurns2, dmgMult1, dmgMult2 = Outcomes(p1Turns[i], p2Turns[i], condTurns1, condTurns2, dmgMult1, dmgMult2, i)
-        if p1.health == 0 or p2.health == 0:
-          break
-    elif p1.locked == True and p2.locked == False:
-      currBg = 1
-    elif p1.locked == False:
-      currBg = 1
-  print(p1.name, 'health:', str(p1.health))
-  print(p2.name, 'health:', str(p2.health))
-  if p1.health == 0 and p2.health == 0:
-    print('Draw!')
-  elif p2.health == 0:
-    print(p1.name, 'wins!')
-  elif p1.health == 0:
-    print(p2.name, 'wins!')
+  DISPLAYSURF.blit(background,(0,0))
 
+  for event in pygame.event.get():
+    if event.type == QUIT:
+      pygame.quit()
+      sys.exit()
+    elif event.type == MOUSEMOTION:
+      mousex, mousey = event.pos
+      for card in range(len(p1Cards)):
+        if p1Cards[card].selected == True:
+          p1Cards[card].moveToSetPos(mousex,mousey)
+      for card in range(len(p2Cards)):
+        if p2Cards[card].selected == True:
+          p2Cards[card].moveToSetPos(mousex,mousey)
+  
+  #1. Create a series of if statements depending on what screen the player is on
+  #2. Code each statement accordingly. (Combat code in combat screen, etc.)
+  
+  
+  pygame.display.update()
