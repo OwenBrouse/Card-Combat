@@ -220,7 +220,7 @@ background = fightBackground
 
 #BUTTONS
 buttons = []
-buttonText       = ['Done'       ]
+buttonText       = ['Done','Menu','Settings','Game','Tutorial']
 buttonTextColour = [[0  ,0  ,0  ]]
 buttonBoxColour  = [[255,255,255]]
 
@@ -231,12 +231,10 @@ def Draw(numOfCards, p1H, p2H):
   if p1.health <= 10 and p1.health > 0:
     for i in range(p1.health - len(p1Hand)):
       p1H.append(deck1[0])
-      p1Cards.append(Card(100,100,0,deck1[0], 70, 111))
       deck1.remove(deck1[0])
   elif p1.health > 10:
     for i in range(numOfCards - len(p1Hand)):
       p1H.append(deck1[0])
-      p1Cards.append(Card(100,100,0,deck1[0], 70, 111))
       deck1.remove(deck1[0])
   while len(deck1) < p1.health:
     deck1.append(random.randint(1, len(choices[0])))
@@ -244,23 +242,14 @@ def Draw(numOfCards, p1H, p2H):
   if p2.health <= 10 and p2.health > 0:
     for i in range(p2.health - len(p2Hand)):
       p2H.append(deck2[0])
-      p2Cards.append(Card(100,100,0,deck2[0], 70, 111))
       deck2.remove(deck2[0])
   elif p2.health > 10:
     for i in range(numOfCards - len(p2Hand)):
       p2H.append(deck2[0])
-      p2Cards.append(Card(100,100,0,deck2[0], 70, 111))
       deck2.remove(deck2[0])
   while len(deck2) < p2.health:
     deck2.append(random.randint(1, len(choices[0])))
-            
-  #Collects the amount of choices the player has into lists.
-  p1M = []
-  p2M = []
-  for i in range(1,len(choices[0]) + 1):
-    p1M.append(p1H.count(i))
-    p2M.append(p2H.count(i))
-  return p1M, p2M, p1H, p2H
+  return p1H, p2H
   
 
 def Input(numOfTurns, p1H, p2H):
@@ -595,25 +584,100 @@ def Outcomes(c1, c2, cond1, cond2, dmgM1, dmgM2, turn):
     print(p2.name, 'is stunned!')
   print('')  
   return cond1, cond2, dmgM1, dmgM2
+
+hasDrawn = False
   
 while True:  
   DISPLAYSURF.blit(background,(0,0))
 
+  if screen == 0:
+    #MainMenu
+
+    hasDrawn = False
+    
+  elif screen == 1:
+    #Settings
+    
+  elif screen == 2:
+    #Player1Choice
+
+    background = cardBackground
+
+    temp = Button(850-(700*numPlayer),90,250,55,buttonText[0],buttonTextColour[0],buttonBoxColour[0]) #make button
+    buttons.append(temp)
+
+    for inputNumber in range(5): #draw 5 rectangles
+      pygame.draw.rect(DISPLAYSURF, (0,0,0),(80+(90*inputNumber)+(400*numPlayer),0,80,120))
+      textFont = pygame.font.Font('freesansbold.ttf', 32)
+      text = textFont.render(str(inputNumber+1), True, (255,255,255))
+      textSize = text.get_rect()
+      DISPLAYSURF.blit(text,((120+(90*inputNumber)+(400*numPlayer))-(textSize[2]/2),60-(textSize[2]/2)))
+
+    deckCard = Card(40,65,0,1,70,111)
+
+    if hasDrawn == False:
+      p1Hand, p2Hand = Draw(10, p1Hand, p2Hand)
+      hasDrawn = True
+
+    for event in pygame.event.get():
+      if event.type == QUIT:
+        pygame.quit()
+        sys.exit()
+      elif event.type == MOUSEMOTION:
+        mousex, mousey = event.pos
+        for card in range(len(p1Cards)):
+          if p1Cards[card].selected == True:
+            p1Cards[card].moveToSetPos(mousex,mousey)
+
+  elif screen == 3:
+    #Player2Choice
+
+    background = cardBackground
+
+    temp = Button(850-(700*numPlayer),90,250,55,buttonText[0],buttonTextColour[0],buttonBoxColour[0]) #make button
+    buttons.append(temp)
+    
+    for inputNumber in range(5): #draw 5 rectangles
+      pygame.draw.rect(DISPLAYSURF, (0,0,0),(80+(90*inputNumber)+(400*numPlayer),0,80,120))
+      textFont = pygame.font.Font('freesansbold.ttf', 32)
+      text = textFont.render(str(inputNumber+1), True, (255,255,255))
+      textSize = text.get_rect()
+      DISPLAYSURF.blit(text,((120+(90*inputNumber)+(400*numPlayer))-(textSize[2]/2),60-(textSize[2]/2)))
+
+    deckCard = Card(960,65,0,1,70,111)
+
+    
+    
+    for card in range(p1Hand)
+    
+    for event in pygame.event.get():
+      if event.type == QUIT:
+        pygame.quit()
+        sys.exit()
+      elif event.type == MOUSEMOTION:
+        mousex, mousey = event.pos
+        for card in range(len(p2Cards)):
+          if p2Cards[card].selected == True:
+            p2Cards[card].moveToSetPos(mousex,mousey)
+
+  elif screen == 4:
+    #GameScreen
+    hasDrawn = False
+    
+  elif screen == 5:
+    #HowToPlay
+    
+  
   for event in pygame.event.get():
     if event.type == QUIT:
       pygame.quit()
       sys.exit()
     elif event.type == MOUSEMOTION:
       mousex, mousey = event.pos
-      for card in range(len(p1Cards)):
-        if p1Cards[card].selected == True:
-          p1Cards[card].moveToSetPos(mousex,mousey)
       for card in range(len(p2Cards)):
         if p2Cards[card].selected == True:
           p2Cards[card].moveToSetPos(mousex,mousey)
-  
-  #1. Create a series of if statements depending on what screen the player is on
-  #2. Code each statement accordingly. (Combat code in combat screen, etc.)
-  
+    
   
   pygame.display.update()
+  
