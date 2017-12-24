@@ -60,7 +60,7 @@ class Card:
         #genaral information
         self.Img = -1
         self.Id = Id
-        self.length = random.randint(0,4)
+        self.length = random.randint(1,5)
         self.width = width
         self.heigth = heigth
         self.x = x
@@ -82,7 +82,7 @@ class Card:
     def display(self):
         "draws the card"
         if (self.selected == True or self.y == 60) and self.length != 0:
-            pygame.draw.rect(DISPLAYSURF, [0,0,200],(cards[drawCard].x-(35+(90*self.length)),cards[drawCard].y-56,70+(90*self.length),111))
+            pygame.draw.rect(DISPLAYSURF, [0,0,200],(cards[drawCard].x-(35+(90*(self.length-1))),cards[drawCard].y-56,70+(90*(self.length-1)),111))
 
         image = pygame.transform.scale(cardImage[self.Img], (self.width, self.heigth))
         DISPLAYSURF.blit(image, ((self.x-(self.width/2)),(self.y-(self.heigth/2))))
@@ -219,17 +219,17 @@ for numPlayer in range(2):
                 mouseX, mouseY = event.pos
                 for card in range(len(cards)):
                     if cards[card].selected == True: #decting if card is in a box
-                        if mouseY < 120 :
+                        if mouseY < 200 :
                             for fakeInputNumber in range(5):
                                 if mouseX >(80+(90*fakeInputNumber)+(400*numPlayer)) and mouseX <(160+(90*fakeInputNumber)+(400*numPlayer))and theChosenCards[fakeInputNumber] == 0:
                                     if cards[card].length == 0:
                                         cards[card].goTo((120+(90*fakeInputNumber)+(400*numPlayer)),60)
                                         theChosenCards[fakeInputNumber] = cards[card].Id
                                     else:
-                                        for less in range(cards[card].length+1):
+                                        for less in range(cards[card].length):
                                             if  theChosenCards[fakeInputNumber-less] == 0 and fakeInputNumber-less >= 0:
-                                                if less == cards[card].length:
-                                                    for more in range(cards[card].length+1):
+                                                if less == cards[card].length-1:
+                                                    for more in range(cards[card].length):
                                                         if fakeInputNumber-more >= 0:
                                                            theChosenCards[fakeInputNumber-more] = cards[card].Id
                                                            cards[card].goTo((120+(90*fakeInputNumber)+(400*numPlayer)),60)
@@ -250,7 +250,7 @@ for numPlayer in range(2):
                         for fakeInputNumber in range(5): # is this card in a box if so remove it's value
                             if cards[card].x == (120+(90*fakeInputNumber)+(400*numPlayer)) and cards[card].y == 60:
                                 theChosenCards[fakeInputNumber] = 0
-                                for more in range(1,cards[card].length+1):
+                                for more in range(1,cards[card].length):
                                     theChosenCards[fakeInputNumber-more] = 0
                                     
                         cards[card].selected = True #selects dat card
