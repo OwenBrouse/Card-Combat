@@ -15,7 +15,7 @@ backPhoto = pygame.transform.scale(backPhoto,(1000,750))
 # Card value storage
 cards = []
 theChosenCards=[0,0,0,0,0]
-cardImage = [pygame.image.load('Card_Standing.png'),pygame.image.load('Card_Punch.png'),pygame.image.load('Card_Kick.png'),pygame.image.load('Card_Dodge.png'),pygame.image.load('Card_Health.png'),pygame.image.load('Card_Front.png'),pygame.image.load('Card_Back.png')]
+cardImage = [pygame.image.load('Card_Standing.png'),pygame.image.load('Card_Punch.png'),pygame.image.load('Card_Kick.png'),pygame.image.load('Card_Dodge.png'),pygame.image.load('Card_Heal.png'),pygame.image.load('Card_final.png'),pygame.image.load('Card_Flying_Kick.png'),pygame.image.load('Card_Sweep.png'),pygame.image.load('Card_Spin.png'),pygame.image.load('Card_Uppercut.png'),pygame.image.load('Card_Taunt.png'),pygame.image.load('Card_Suicide.png'),pygame.image.load('Card_Stun.png'),pygame.image.load('Card_Prep.png')  ,pygame.image.load('Card_Charging.png'),pygame.image.load('Card_Health.png'),pygame.image.load('Card_Front.png'),pygame.image.load('Card_Back.png')]
 still = 0
 
 # button value storage
@@ -60,6 +60,7 @@ class Card:
         #genaral information
         self.Img = -1
         self.Id = Id
+        self.length = random.randint(0,4)
         self.width = width
         self.heigth = heigth
         self.x = x
@@ -80,9 +81,12 @@ class Card:
 
     def display(self):
         "draws the card"
-        image = pygame.transform.scale(cardImage[self.Img], (self.width, self.heigth))
+        if (self.selected == True or self.y == 60) and self.length != 0:
+            pygame.draw.rect(DISPLAYSURF, [0,0,200],(cards[drawCard].x-(35+(90*self.length)),cards[drawCard].y-56,70+(90*self.length),111))
 
+        image = pygame.transform.scale(cardImage[self.Img], (self.width, self.heigth))
         DISPLAYSURF.blit(image, ((self.x-(self.width/2)),(self.y-(self.heigth/2))))
+                
 
     def moveTo (self,xx,yy):
         "has the card move closer to a spot"
@@ -154,9 +158,9 @@ for numPlayer in range(2):
     buttons.append(temp)
 
     for new in range (10): #ten random cards
-        temp = Card(40+(920*numPlayer),60,70,111,random.randint(1,3))	
+        temp = Card(40+(920*numPlayer),60,70,111,random.randint(1,11))	
         cards.append(temp)
-    cards[len(cards)-1].moveTo(275+(((len(cards)-2)%5)*120),300+(((len(cards)-2)//5)*180))
+        cards[len(cards)-1].moveTo(275+(((len(cards)-2)%5)*120),300+(((len(cards)-2)//5)*180))
 ##    for new in range (30): #ten random cards
 ##        temp = Card(40+(920*numPlayer),60,70,111,random.randint(1,3))	
 ##        cards.append(temp)
@@ -197,7 +201,7 @@ for numPlayer in range(2):
                 cards[drawCard].flip()
             if cards[drawCard].flipSelect == False and cards[drawCard].selected == False and cards[drawCard].computerSelect == False:
                 still += 1 #counts the ammout of cards doing nothing
-                
+           
             cards[drawCard].display()
         cards[0].display()
 
@@ -215,11 +219,25 @@ for numPlayer in range(2):
                 mouseX, mouseY = event.pos
                 for card in range(len(cards)):
                     if cards[card].selected == True: #decting if card is in a box
-                        for fakeInputNumber in range(5):
-                            if mouseY < 120 :
+                        if mouseY < 120 :
+                            for fakeInputNumber in range(5):
                                 if mouseX >(80+(90*fakeInputNumber)+(400*numPlayer)) and mouseX <(160+(90*fakeInputNumber)+(400*numPlayer))and theChosenCards[fakeInputNumber] == 0:
-                                    cards[card].goTo((120+(90*fakeInputNumber)+(400*numPlayer)),60)
-                                    theChosenCards[fakeInputNumber] = cards[card].Id
+                                    if cards[card].length == 0:
+                                        cards[card].goTo((120+(90*fakeInputNumber)+(400*numPlayer)),60)
+                                        theChosenCards[fakeInputNumber] = cards[card].Id
+                                    else:
+                                        for less in range(cards[card].length+1):
+                                            if  theChosenCards[fakeInputNumber-less] == 0 and fakeInputNumber-less >= 0:
+                                                if less == cards[card].length:
+                                                    for more in range(cards[card].length+1):
+                                                        if fakeInputNumber-more >= 0:
+                                                           theChosenCards[fakeInputNumber-more] = cards[card].Id
+                                                           cards[card].goTo((120+(90*fakeInputNumber)+(400*numPlayer)),60)
+                                                    break
+                                            else:
+                                                cards[card].y = 200
+                                                break
+                                        
                                 elif fakeInputNumber == 0: # keep unwanted cards off the bars
                                     cards[card].y = 200
                     cards[card].selected = False #unselect ALL THE CARDS 
@@ -228,10 +246,13 @@ for numPlayer in range(2):
             elif event.type == MOUSEBUTTONDOWN:
                 mouseX, mouseY = event.pos
                 for card in range(1,len(cards)):
-                    if cards[card].clicked(mouseX,mouseY)==True:
+                    if cards[card].clicked(mouseX,mouseY)==True: 
                         for fakeInputNumber in range(5): # is this card in a box if so remove it's value
                             if cards[card].x == (120+(90*fakeInputNumber)+(400*numPlayer)) and cards[card].y == 60:
                                 theChosenCards[fakeInputNumber] = 0
+                                for more in range(1,cards[card].length+1):
+                                    theChosenCards[fakeInputNumber-more] = 0
+                                    
                         cards[card].selected = True #selects dat card
                         break
                 for button in range(len(buttons)):
