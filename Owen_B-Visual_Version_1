@@ -9,10 +9,10 @@ fpsClock = pygame.time.Clock()
 DISPLAYSURF = pygame.display.set_mode((1000, 700), 0, 32)
 pygame.display.set_caption('Card Comabat TESTS')
 backPhoto = pygame.image.load('Card_Choice_Background.png')
-backPhoto = pygame.transform.scale(backPhoto,(1000,750))
+backPhoto = pygame.transform.scale(backPhoto,(1000,700))
 
 #THE MOST IMPORTANT VARIABLE_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
-intensity = 1 
+intensity = 100 
 
 #Hard coded numbers Dounut change
 numberOfMoves = 5
@@ -90,14 +90,14 @@ class Player:
 		        if cards[(new+1)-numberOfDeletedCards].Id == '':
 		        	del cards[(new+1)-numberOfDeletedCards]
 		        	numberOfDeletedCards+=1
-		        cards[len(cards)-1].moveTo(150+(((len(cards)-2)%5)*175),300+(((len(cards)-2)//5)*225))
+		        cards[len(cards)-1].moveTo(150+(((len(cards)-2)%5)*175),300+(((len(cards)-2)//5)*250))
 		
 		
 		
 		
 		while done == False or still != len(cards)-1:
 	
-			DISPLAYSURF.blit(backPhoto, (0,-40))	
+			DISPLAYSURF.blit(backPhoto, (0,0))	
 	
 			for inputNumber in range(numberOfMoves): #draw 5 rectangles
 				pygame.draw.rect(DISPLAYSURF, (0,0,0),(80+(90*inputNumber)+(400*PlayerNumber),0,80,120))
@@ -141,16 +141,28 @@ class Player:
 						if cards[card].selected == True: #decting if card is in a box
 							cards[card].width = 105
 							cards[card].height = 167
-							for fakeInputNumber in range(numberOfMoves):
-								if mouseY < 120 :
+							if mouseY < 120 :
+								for fakeInputNumber in range(numberOfMoves):
 									if mouseX >(80+(90*fakeInputNumber)+(400*PlayerNumber)) and mouseX <(160+(90*fakeInputNumber)+(400*PlayerNumber))and self.moves[fakeInputNumber] == 'No attack':
-										cards[card].goTo((120+(90*fakeInputNumber)+(400*PlayerNumber)),60)
-										cards[card].width = 70
-										cards[card].height = 111
-										self.moves[fakeInputNumber] = cards[card].Id
+											for less in range(cards[card].length):
+												if   fakeInputNumber-less >= 0 and self.moves[fakeInputNumber-less] == 'No attack' :
+													if less == cards[card].length-1:
+														for more in range(cards[card].length):
+															if fakeInputNumber-more >= 0:#dont need
+																if fakeInputNumber-more == fakeInputNumber:
+																	self.moves[fakeInputNumber-more] = cards[card].Id
+																else:
+																	self.moves[fakeInputNumber-more] = attackEffect[cards[card].Id]
+																cards[card].goTo((120+(90*fakeInputNumber)+(400*PlayerNumber)),60)
+																cards[card].width = 70
+																cards[card].height = 111
+														break
+												else:
+													cards[card].y = 250
+													break
 									elif fakeInputNumber == 0: # keep unwanted cards off the bars
 										cards[card].y = 250
-								cards[card].selected = False #unselect ALL THE CARDS 
+						cards[card].selected = False #unselect ALL THE CARDS 
 			
 			
 				elif event.type == MOUSEBUTTONDOWN:
@@ -162,7 +174,8 @@ class Player:
 							cards[card].selected = True
 							for fakeInputNumber in range(numberOfMoves): # is this card in a box if so remove it's value
 								if cards[card].x == (120+(90*fakeInputNumber)+(400*PlayerNumber)) and cards[card].y == 60:
-									self.moves[fakeInputNumber] = 'No attack'
+									for more in range(cards[card].length):
+										self.moves[fakeInputNumber-more] = 'No attack'
 									break
 							break
 						elif card == len(cards)-1:
@@ -197,7 +210,7 @@ class Player:
 
                         #draw Health			
 			textFont = pygame.font.Font('freesansbold.ttf', 32)
-			text = textFont.render(str(len(self.deck)), True, (255,255,255))
+			text = textFont.render(str(len(self.deck)*intensity), True, (255,255,255))
 			textSize = text.get_rect()                       
 			DISPLAYSURF.blit(text,((40+(920*PlayerNumber))-(textSize[2]/2),55))
 
@@ -205,8 +218,8 @@ class Player:
 			fpsClock.tick(FPS)
 	
 		for ChosenCards in range(len(self.moves)):
-			if self.moves[ChosenCards] == 'finalMove':
-				del self.deck[self.deck.index('finalMove')]
+			if self.moves[ChosenCards] == 'Final_Move':
+				del self.deck[self.deck.index('Final_Move')]
 		for kill in range(len(cards)):
 		   del cards[0]
 		for kill in range(len(buttons)):
@@ -217,8 +230,10 @@ class Player:
 		for i in range(round(amount/intensity)*self.damageMultiplyer):
 			if len(self.deck) > 0:
 				delete = random.randint(0,len(self.deck)-1)
-				if 	self.deck[delete] != 'finalMove' or len(self.deck)==1:
+				if 	self.deck[delete] != 'Final_Move' or len(self.deck)==1:
 					del self.deck[delete]
+				else:
+					del self.deck[delete-1]
 		print(self.name + ' has taken ' +str(amount*self.damageMultiplyer)+' hits')
 		self.damageString = str(-1*(amount*self.damageMultiplyer))
 
@@ -231,7 +246,7 @@ class Player:
 				while done == False:
 					ID = random.randint(0,len(self.deck)-1)
 					if ID not in preUsed:
-						if (self.deck[ID] == 'finalMove' and len(self.deck)<=10) or self.deck[ID] != 'finalMove':
+						if (self.deck[ID] == 'Final_Move' and len(self.deck)<=10) or self.deck[ID] != 'Final_Move':
 							self.hand[handIndex] = self.deck[ID]
 							preUsed.append(ID)
 							done = True
@@ -244,6 +259,7 @@ class Card:
         #genaral information
         self.Img = 'back'
         self.Id = Id
+        self.length = 0
         self.width = width
         self.height = height
         self.x = x
@@ -264,8 +280,20 @@ class Card:
 
     def display(self):
         "draws the card"
-        image = pygame.transform.scale(cardImage[self.Img], (self.width, self.height))
+        if (self.selected == True or self.y == 60):
+                textFont = pygame.font.Font('freesansbold.ttf', 32)
+                text = textFont.render(str(attackDamage[self.Id]), True, [255,0,0])
+                textSize = text.get_rect()
+                DISPLAYSURF.blit(text,((self.x-(self.width/2))+((self.width-textSize[2])/2),(self.y+((self.height)/2)+10)))
 
+                
+                self.length = attackLength[self.Id]
+                if attackEffect[self.Id] == 'prep':
+                        pygame.draw.rect(DISPLAYSURF, [255,255,0],(self.x-35-(90*(self.length-1)),self.y-56,70+(90*(self.length-1)),111))
+                else:
+                        pygame.draw.rect(DISPLAYSURF, [90,0,235],(self.x-35-(90*(self.length-1)),self.y-56,70+(90*(self.length-1)),111))
+
+        image = pygame.transform.scale(cardImage[self.Img], (self.width, self.height))
         DISPLAYSURF.blit(image, ((self.x-(self.width/2)),(self.y-(self.height/2))))
 
     def moveTo (self,xx,yy):
@@ -359,17 +387,17 @@ class Button:
 
 def setAttacks():
 	"defins attacks and give a simple way to turn them off"
-	righthook = True
-	quickKick = True
-	blockKick = True
-	twistKick = False
-	megaPunch = False
+	Punch = True
+	Kick = True
+	Dodge_Kick = True
+	Flying_Kick = True
+	Uppercut = True
 	speedSpin = False
-	legsSweep = False
-	leaveGame = False
-	fixDamage = False
-	dissTrack = False
-	finalMove = True
+	Sweep = True
+	Quit = False
+	Heal = True
+	Taunt = True
+	Final_Move = True
 
 	
 	personImage['stun'] = pygame.image.load('Stun.png')
@@ -382,7 +410,7 @@ def setAttacks():
 
 	personImage['charge'] = pygame.image.load('Charging.png')
 	cardImage['charge'] = pygame.image.load('Card_Charging.png')
-	personSize['charge'] = [175,350]
+	personSize['charge'] = [275,350]
 
 	cardImage['back'] = pygame.image.load('Card_Back.png')
 	cardImage['health'] = pygame.image.load('Card_Health.png')
@@ -400,57 +428,57 @@ def setAttacks():
 	cardImage['No attack'] = pygame.image.load('Card_Standing.png')
 	personSize['No attack'] = [175,350]
 	
-	if righthook == True:
-		attack.append('righthook')
-		attackDamage['righthook'] = 1*intensity
-		attackLength['righthook'] = 1
-		attackEffect['righthook'] = 'charge'
-		personImage['righthook']  = pygame.image.load('Punch.png')
-		cardImage['righthook']    = pygame.image.load('Card_Punch.png')
-		personSize['righthook']   = [300,400]
-		for i in range(3):
-			odds.append('righthook')
-	if quickKick == True:
-		attack.append('quickKick')
-		attackDamage['quickKick'] = 2*intensity
-		attackLength['quickKick'] = 1
-		attackEffect['quickKick'] = 'charge'
-		personImage['quickKick'] = pygame.image.load('Kick.png')
-		cardImage['quickKick'] = pygame.image.load('Card_Kick.png')
-		personSize['quickKick'] = [325,500]
-		for i in range(3):
-			odds.append('quickKick')
-	if blockKick == True:
-		attack.append('blockKick')
-		attackDamage['blockKick'] = 0*intensity
-		attackLength['blockKick'] = 1
-		attackEffect['blockKick'] = 'charge'
-		personImage['blockKick'] = pygame.image.load('block Kick.png')
-		cardImage['blockKick'] = pygame.image.load('Card_Dodge.png')
-		personSize['blockKick'] = [250,475]
-		for i in range(3):
-			odds.append('blockKick')
-	if twistKick == True:
-		attack.append('twistKick')
-		attackDamage['twistKick'] = 11*intensity
-		attackLength['twistKick'] = 2
-		attackEffect['twistKick'] = 'prep'
-		personImage['twistKick'] = pygame.image.load('Flying_Kick.png')
-		cardImage['twistKick'] = pygame.image.load('Card_Flying_Kick.png')
-		personSize['twistKick'] = [310,310]
+	if Punch == True:
+		attack.append('Punch')
+		attackDamage['Punch'] = 1*intensity
+		attackLength['Punch'] = 1
+		attackEffect['Punch'] = 'charge'
+		personImage['Punch']  = pygame.image.load('Punch.png')
+		cardImage['Punch']    = pygame.image.load('Card_Punch.png')
+		personSize['Punch']   = [300,400]
 		for i in range(1):
-			odds.append('twistKick')
+			odds.append('Punch')
+	if Kick == True:
+		attack.append('Kick')
+		attackDamage['Kick'] = 2*intensity
+		attackLength['Kick'] = 1
+		attackEffect['Kick'] = 'charge'
+		personImage['Kick'] = pygame.image.load('Kick.png')
+		cardImage['Kick'] = pygame.image.load('Card_Kick.png')
+		personSize['Kick'] = [325,500]
+		for i in range(1):
+			odds.append('Kick')
+	if Dodge_Kick == True:
+		attack.append('Dodge_Kick')
+		attackDamage['Dodge_Kick'] = 'stun?'
+		attackLength['Dodge_Kick'] = 1
+		attackEffect['Dodge_Kick'] = 'charge'
+		personImage['Dodge_Kick'] = pygame.image.load('block Kick.png')
+		cardImage['Dodge_Kick'] = pygame.image.load('Card_Dodge.png')
+		personSize['Dodge_Kick'] = [250,475]
+		for i in range(1):
+			odds.append('Dodge_Kick')
+	if Flying_Kick == True:
+		attack.append('Flying_Kick')
+		attackDamage['Flying_Kick'] = 9*intensity
+		attackLength['Flying_Kick'] = 2
+		attackEffect['Flying_Kick'] = 'prep'
+		personImage['Flying_Kick'] = pygame.image.load('Flying Kick.png')
+		cardImage['Flying_Kick'] = pygame.image.load('Card_Flying_Kick.png')
+		personSize['Flying_Kick'] = [310,310]
+		for i in range(1):
+			odds.append('Flying_Kick')
 	
-	if megaPunch == True:
-		attack.append('megaPunch')
-		attackDamage['megaPunch'] = 9*intensity
-		attackLength['megaPunch'] = 5
-		attackEffect['megaPunch'] = 'charge'
-		personImage['megaPunch'] = pygame.image.load('Uppercut.png')
-		cardImage['megaPunch'] = pygame.image.load('Card_Uppercut.png')
-		personSize['megaPunch'] = [200,500]
+	if Uppercut == True:
+		attack.append('Uppercut')
+		attackDamage['Uppercut'] = 9*intensity
+		attackLength['Uppercut'] = 5
+		attackEffect['Uppercut'] = 'charge'
+		personImage['Uppercut'] = pygame.image.load('Uppercut.png')
+		cardImage['Uppercut'] = pygame.image.load('Card_Uppercut.png')
+		personSize['Uppercut'] = [200,500]
 		for i in range(1):
-			odds.append('megaPunch')
+			odds.append('Uppercut')
 	if speedSpin == True:
 		attack.append('speedSpin')
 		attackDamage['speedSpin'] = 3*intensity
@@ -461,53 +489,53 @@ def setAttacks():
 		personSize['speedSpin'] = [350,400] 
 		for i in range(1):
 			odds.append('speedSpin')
-	if legsSweep == True:
-		attack.append('legsSweep')
-		attackDamage['legsSweep'] = 1*intensity
-		attackLength['legsSweep'] = 1
-		attackEffect['legsSweep'] = 'charge'
-		personImage['legsSweep'] = pygame.image.load('Sweep.png')
-		cardImage['legsSweep'] = pygame.image.load('Card_Sweep.png')
-		personSize['legsSweep'] = [425,500]
-		for i in range(2):
-			odds.append('legsSweep')
-	if fixDamage == True:
-		attack.append('fixDamage')
-		attackDamage['fixDamage'] = 2*intensity
-		attackLength['fixDamage'] = 2
-		attackEffect['fixDamage'] = 'charge'
-		personImage['fixDamage'] = pygame.image.load('Heal.png')
-		cardImage['fixDamage'] = pygame.image.load('Card_Heal.png')
-		personSize['fixDamage'] = [425,500]
-		for i in range(2):
-			odds.append('fixDamage')
-	if dissTrack == True:
-		attack.append('dissTrack')
-		attackDamage['dissTrack'] = 0*intensity
-		attackLength['dissTrack'] = 1
-		attackEffect['dissTrack'] = 'charge'
-		personImage['dissTrack'] = pygame.image.load('Taunt.png')
-		cardImage['dissTrack'] = pygame.image.load('Card_Taunt.png')
-		personSize['dissTrack'] = [425,500]
+	if Sweep == True:
+		attack.append('Sweep')
+		attackDamage['Sweep'] = 'stun'
+		attackLength['Sweep'] = 1
+		attackEffect['Sweep'] = 'charge'
+		personImage['Sweep'] = pygame.image.load('Sweep.png')
+		cardImage['Sweep'] = pygame.image.load('Card_Sweep.png')
+		personSize['Sweep'] = [400,300]
 		for i in range(1):
-			odds.append('dissTrack')
-	if finalMove == True:
-		attack.append('finalMove')
-		attackDamage['finalMove'] = 4*intensity
-		attackLength['finalMove'] = 1
-		attackEffect['finalMove'] = 'charge'
-		personImage['finalMove'] = pygame.image.load('Final_Move.png')
-		cardImage['finalMove'] = pygame.image.load('Card_final.png')
-		personSize['finalMove'] = [450,363]
+			odds.append('Sweep')
+	if Heal == True:
+		attack.append('Heal')
+		attackDamage['Heal'] = -2*intensity
+		attackLength['Heal'] = 2
+		attackEffect['Heal'] = 'charge'
+		personImage['Heal'] = pygame.image.load('Heal.png')
+		cardImage['Heal'] = pygame.image.load('Card_Heal.png')
+		personSize['Heal'] = [275,475]
+		for i in range(1):
+			odds.append('Heal')
+	if Taunt == True:
+		attack.append('Taunt')
+		attackDamage['Taunt'] = 'x2 dmg'
+		attackLength['Taunt'] = 1
+		attackEffect['Taunt'] = 'charge'
+		personImage['Taunt'] = pygame.image.load('Taunt.png')
+		cardImage['Taunt'] = pygame.image.load('Card_Taunt.png')
+		personSize['Taunt'] = [225,420]
+		for i in range(1):
+			odds.append('Taunt')
+	if Final_Move == True:
+		attack.append('Final_Move')
+		attackDamage['Final_Move'] = 4*intensity
+		attackLength['Final_Move'] = 1
+		attackEffect['Final_Move'] = 'charge'
+		personImage['Final_Move'] = pygame.image.load('Final_Move.png')
+		cardImage['Final_Move'] = pygame.image.load('Card_final.png')
+		personSize['Final_Move'] = [450,363]
 			
-	if leaveGame == True:	
-		attack.append('leaveGame')
-		attackDamage['leaveGame'] = deckSize*intensity
-		attackLength['leaveGame'] = numberOfMoves
-		attackEffect['leaveGame'] = 'leaveGame'
-		personImage['leaveGame'] = pygame.image.load('Suicide.png')
-		cardImage['leaveGame'] = pygame.image.load('Card_Suicide.png')
-		personSize['leaveGame'] = [425,500]
+	if Quit == True:	
+		attack.append('Quit')
+		attackDamage['Quit'] = deckSize*intensity
+		attackLength['Quit'] = numberOfMoves
+		attackEffect['Quit'] = 'Quit'
+		personImage['Quit'] = pygame.image.load('Suicide.png')
+		cardImage['Quit'] = pygame.image.load('Card_Suicide.png')
+		personSize['Quit'] = [425,500]
 	
 	#print(attack)
 	#print(attackDamage)
@@ -519,7 +547,7 @@ def checkValues():
 	if deckSize>=handSize and handSize>=numberOfMoves:	
 		if numberOfPlayers > 1 and numberOfMoves > 1 and intensity > 0:
 			for damage in attack:
-				if attackDamage[damage] <= 0 and damage != 'blockKick' and damage != 'No attack'and damage != 'legsSweep' and damage != 'dissTrack':
+				if damage != 'Dodge_Kick' and damage != 'No attack'and damage != 'Sweep' and damage != 'Taunt' and damage != 'Heal' and attackDamage[damage] <= 0 :
 					return False
 				else:
 					if damage == attack[len(attack)-1]:
@@ -601,7 +629,7 @@ def battle(what,who,when,person):
 		print(playerList[person].name +' is knocked out')
 	elif what == 'charge':
 		print(playerList[person].name +' is charging up an attack')
-	elif what == 'righthook':
+	elif what == 'Punch':
 		print(playerList[person].name + ' '+ what + 'es ' + playerList[who].name)
 		if playerList[who].moves[when] == what and playerList[who].target[when]==person:
 			print('draw')
@@ -613,12 +641,12 @@ def battle(what,who,when,person):
 			elif playerList[who].moves[when] == 'prep':
 				playerList[who].moves[when+1] = 'stun'
 				print(playerList[who].name + ' has lost balence and is now stunned')
-			elif playerList[who].moves[when] == 'dissTrack':
+			elif playerList[who].moves[when] == 'Taunt':
 				playerList[playerList[who].target[when]].damageMultiplyer = 1
 				print(playerList[who].name + ' has gotten their face caved in instead of throwing shade')
-	elif what == 'quickKick':
+	elif what == 'Kick':
 		print(playerList[person].name + ' ' + what + 'es ' + playerList[who].name)
-		if playerList[who].moves[when] == 'blockKick' and playerList[who].target[when] == person:
+		if playerList[who].moves[when] == 'Dodge_Kick' and playerList[who].target[when] == person:
 			print('but ' + playerList[who].name + ' blocks it')
 			playerList[person].moves[when+1] = 'stun'
 			print(playerList[person].name + ' is now stunned')
@@ -632,16 +660,16 @@ def battle(what,who,when,person):
 			elif playerList[who].moves[when] == 'prep':
 				playerList[who].moves[when+1] = 'stun'
 				print(playerList[who].name + ' has lost balence and is now stunned')
-			elif playerList[who].moves[when] == 'dissTrack':
+			elif playerList[who].moves[when] == 'Taunt':
 				playerList[playerList[who].target[when]].damageMultiplyer = 1
 				print(playerList[who].name + ' has gotten kick in the nut instead of throwing shade')
-	elif what == 'blockKick':
+	elif what == 'Dodge_Kick':
 		print(playerList[person].name + ' is blocking')
-	elif what == 'twistKick':
+	elif what == 'Flying_Kick':
 		print(playerList[person].name + ' '+ what + 'es ' + playerList[who].name)
 		if playerList[who].moves[when] == what and playerList[who].target[when]==person:
 			print('draw')
-		elif playerList[who].moves[when] == 'blockKick' and playerList[who].target[when] == person:
+		elif playerList[who].moves[when] == 'Dodge_Kick' and playerList[who].target[when] == person:
 			print('but ' + playerList[who].name + ' blocks it')
 			playerList[person].moves[when+1] = 'stun'
 			print(playerList[person].name + ' is now stunned')
@@ -653,10 +681,10 @@ def battle(what,who,when,person):
 			elif playerList[who].moves[when] == 'prep':
 				playerList[who].moves[when+1] = 'stun'
 				print(playerList[who].name + ' has lost balence and is now stunned')
-			elif playerList[who].moves[when] == 'dissTrack':
+			elif playerList[who].moves[when] == 'Taunt':
 				playerList[playerList[who].target[when]].damageMultiplyer = 1
 				print(playerList[who].name + ' has gotten kick across the room instead of throwing shade')
-	elif what == 'megaPunch':
+	elif what == 'Uppercut':
 		print(playerList[person].name + ' '+ what + 'es ' + playerList[who].name)
 		if playerList[who].moves[when] == what and playerList[who].target[when]==person:
 			print('draw')
@@ -668,7 +696,7 @@ def battle(what,who,when,person):
 			elif playerList[who].moves[when] == 'speedSpin':
 				for screwed in range(len(playerList[who].moves)-1):	
 					playerList[who].moves[screwed] = 'stun'
-			elif playerList[who].moves[when] == 'dissTrack':
+			elif playerList[who].moves[when] == 'Taunt':
 				playerList[playerList[who].target[when]].damageMultiplyer = 1
 				print(playerList[who].name + ' has learned how to fly instead of throwing shade')
 	elif what == 'speedSpin':
@@ -680,30 +708,33 @@ def battle(what,who,when,person):
 			if playerList[who].moves[when] == 'prep':
 				playerList[who].moves[when+1] = 'stun'
 				print(playerList[who].name + ' has lost balence and is now stunned')
-			elif playerList[who].moves[when] == 'dissTrack':
+			elif playerList[who].moves[when] == 'Taunt':
 				playerList[playerList[who].target[when]].damageMultiplyer = 1
 				print(playerList[who].name + ' has gotten smacked arcoss the face instead of throwing shade')
-	elif what == 'legsSweep':
+	elif what == 'Sweep':
 		print(playerList[person].name + ' '+ what + 'es ' + playerList[who].name)
 		if playerList[who].moves[when] == what and playerList[who].target[when]==person:
 			print('draw')
 		else:
-			playerList[who].moves[when+1] = 'stun'
-			if playerList[who].moves[when] == 'prep':
-				playerList[who].moves[when+1] = 'stun'
-				print(playerList[who].name + ' has lost balence and is now stunned')
-			elif playerList[who].moves[when] == 'speedSpin':
-				for screwed in range(len(playerList[who].moves)-1):	
-					playerList[who].moves[screwed] = 'stun'
-	elif what == 'leaveGame':
+                        if playerList[who].moves[when] == 'Dodge_Kick':
+                                playerList[person].moves[when+1] == 'stun'
+                        else:
+                                playerList[who].moves[when+1] = 'stun'
+                                if playerList[who].moves[when+1] == 'prep':
+                                        playerList[who].moves[when+2] = 'stun'
+                                        print(playerList[who].name + ' has lost balence and is now stunned')
+                                elif playerList[who].moves[when] == 'speedSpin':
+                                        for screwed in range(len(playerList[who].moves)-1):	
+                                                playerList[who].moves[screwed] = 'stun'
+	elif what == 'Quit':
 		print(playerList[person].name + ' '+ what + 'es ' + playerList[person].name)
 		playerList[person].damage(attackDamage[what])
-	elif what == 'fixDamage':
+	elif what == 'Heal':
 		print(playerList[person].name + ' '+ what + 'es ' + playerList[person].name)
-		for heals in range(attackDamage[what]/intensity):
+		for heals in range(round((attackDamage[what]*-1)/intensity)):
 			cardType = random.randint(1,len(attack)-1)
 			playerList[person].deck.append(attack[cardType])
-	elif what == 'finalMove':
+	elif what == 'Final_Move':
 		print(playerList[person].name + ' summons the hellbound rage hiddin inside their spirit of rage, peace and power raises their arms into the air consentrating their limitless force in a single point forming a singularty that opens an interdimensional gateway to an unspeakable plain of monsters, hell, pain, suffering, smelly farts and umbral darkness for infinty entrnitys of liftmess of repeating foever of that uncofterble sitting position that striks feat into the eye of everyone useing only its shear power and semlly fart but '+playerList[person].name+ ' phone buzzes distration them closing th potal. They punch ' + playerList[who].name + ' in the liver')
 		if playerList[who].moves[when] == what and playerList[who].target[when]==person:
 			print('draw')
@@ -715,19 +746,20 @@ def battle(what,who,when,person):
 			elif playerList[who].moves[when] == 'prep':
 				playerList[who].moves[when+1] = 'stun'
 				print(playerList[who].name + ' has lost balence and is now stunned')
-			elif playerList[who].moves[when] == 'dissTrack':
+			elif playerList[who].moves[when] == 'Taunt':
 				playerList[playerList[who].target[when]].damageMultiplyer = 1
 				print(playerList[who].name + ' has gotten finalized instead of throwing shade')
-	elif what == 'dissTrack':
+	elif what == 'Taunt':
 		print(playerList[person].name + ' '+ what + 'es ' + playerList[who].name)
 		if playerList[who].moves[when] == what and playerList[who].target[when]==person:
 			print('draw')
 		else:
-			playerList[who].damageMultiplyer = 2
-	elif what != 'dissTrack':
-			playerList[who].damageMultiplyer = 1
+			if when != numberOfMoves-1:
+				playerList[who].damageMultiplyer = 2
 	else:
 		print('value error')
+	if when == 4:
+			playerList[who].damageMultiplyer = 1
 
 def clear(numLines):
 	'prints empty lines to flood the screen'
@@ -736,8 +768,8 @@ def clear(numLines):
 		
 def makeDeck():
 	for cardNumber in range(deckSize+1):
-		if attack.count('finalMove') > 0 and masterDeck.count('finalMove') == 0:
-			masterDeck.append('finalMove')
+		if attack.count('Final_Move') > 0 and masterDeck.count('Final_Move') == 0:
+			masterDeck.append('Final_Move')
 		else:	
 			cardType = random.randint(0,len(odds)-1)
 			masterDeck.append(odds[cardType])
@@ -768,7 +800,7 @@ def animate():
 	while gameMode < 2:
 		if gameMode == 1:#stage 1: deal the cards
 		
-			DISPLAYSURF.blit(backPhoto, (0,-40))  
+			DISPLAYSURF.blit(backPhoto, (0,0))  
 			
 			still = 0    
 			for drawCard in range(0,len(cards)):
@@ -786,7 +818,7 @@ def animate():
 			if still == len(cards)-2 :
 				if count<5:
 					for PlayerNumber in range(numberOfPlayers): #cards[(((numberOfPlayers-count)*(PlayerNumber*2))-(5-count))].moveTo(500+((((PlayerNumber*-2)+1)*(70*count))+(((PlayerNumber*-2)+1)*75)),65)
-						cards[(5-count)+(PlayerNumber*-6)].moveTo(120+(75*abs(((1-PlayerNumber)*4)-count))+(460*PlayerNumber),65)
+						cards[(5-count)+(PlayerNumber*-6)].moveTo(120+(75*abs(((1-PlayerNumber)*4)-count))+(460*PlayerNumber),70)
 					count +=1
 				else:
 					gameMode = 1.25
@@ -794,7 +826,7 @@ def animate():
 					
 		if gameMode == 1.25:#stage 1.5: wait
 		
-			DISPLAYSURF.blit(backPhoto, (0,-40))  
+			DISPLAYSURF.blit(backPhoto, (0,0))  
 			buttons[1].display()
 			
 			for drawCard in range(0,len(cards)):
@@ -815,24 +847,25 @@ def animate():
 			
 		elif gameMode == 1.5: # stage 2: play the cards              
 		
-			DISPLAYSURF.blit(backPhoto, (0,-40))    #image
+			DISPLAYSURF.blit(backPhoto, (0,0))    #image
 			
 			if still == len(cards) :
 				if count<5:
 					for numPlayer in range(numberOfPlayers):
 						if cards[(count+1)+(numPlayer*-6)].y < 90:
 							cards[(count+1)+(numPlayer*-6)].moveTo(120+(75*abs(((numPlayer)*4)-count))+(460*numPlayer),150)
+							
+
 							if (count+1)+(numPlayer*-6)>0:
-								playerList[0].state = cards[(count+1)+(numPlayer*-6)].Id
-							else:
-								playerList[1].state = cards[(count+1)+(numPlayer*-6)].Id
 								print('round ' + str(count+1)+' ------------------')
 								for attacker in range(numberOfPlayers):
 									battle(playerList[attacker].moves[count], playerList[attacker].target[count],count,attacker)
-									#playerList[player].info()
 									print()
 									for cardMoves in range(numberOfMoves):
 										cards[(cardMoves+1)+(attacker*6)].Id = playerList[attacker].moves[cardMoves]
+								playerList[0].state = cards[(count+1)+(numPlayer*-6)].Id
+							else:
+								playerList[1].state = cards[(count+1)+(numPlayer*-6)].Id
 								#pygame.time.wait(500)						
 						else:
 							if cards[(count+1)+(numPlayer*-6)].Img == 'back':
@@ -843,9 +876,9 @@ def animate():
 								if  numPlayer == 1:
 									pygame.time.wait(1000)
 									count +=1
-									if playerList[0].state != 'dead' or playerList[0].state != 'prep' or playerList[0].state != 'charge':
+									if playerList[0].state != 'dead' and playerList[0].state != 'prep' and playerList[0].state != 'charge':
 										playerList[0].state = 'No attack'
-									if playerList[1].state != 'dead' or playerList[1].state != 'prep' or playerList[1].state != 'charge':
+									if playerList[1].state != 'dead' and playerList[1].state != 'prep' and playerList[1].state != 'charge':
 										playerList[1].state = 'No attack'
 									playerList[0].damageString = ''
 									playerList[1].damageString = ''
@@ -894,7 +927,7 @@ def animate():
 			DISPLAYSURF.blit(text,((200+(600*names))-(textSize[2]/2),200))
 			
 			textFont = pygame.font.Font('freesansbold.ttf', 32)#print Health (on the card)
-			text = textFont.render(str(len(playerList[names].deck)), True, (255,255,255))
+			text = textFont.render(str(len(playerList[names].deck)*intensity), True, (255,255,255))
 			textSize = text.get_rect()                       
 			DISPLAYSURF.blit(text,((40+(920*names))-(textSize[2]/2),55))
 
@@ -915,24 +948,24 @@ def drawPeeps():
 	
 	if playerList[1].state == 'No attack':
 	  DISPLAYSURF.blit(playerList[1].photo, (500,300))
-	elif playerList[1].state == 'fixDamage' or playerList[1].state == 'twistKick' or playerList[1].state == 'blockKick' or playerList[1].state == 'megaPunch':  
+	elif playerList[1].state == 'Heal' or playerList[1].state == 'Flying_Kick' or playerList[1].state == 'Dodge_Kick' or playerList[1].state == 'Uppercut':  
 	  DISPLAYSURF.blit(playerList[1].photo, (420,200))
-	elif playerList[1].state == 'LegsSweep' or playerList[1].state == 'charge':  
+	elif playerList[1].state == 'Sweep' or playerList[1].state == 'charge':  
 	  DISPLAYSURF.blit(playerList[1].photo, (420,400))
 	elif playerList[1].state == 'stun' or playerList[1].state == 'prep':  
 	  DISPLAYSURF.blit(playerList[1].photo, (420,270))
-	elif playerList[1].state == 'leaveGame':  
+	elif playerList[1].state == 'Quit':  
 	  DISPLAYSURF.blit(playerList[1].photo, (370,270))
 	elif playerList[1].state == 'dead':  
 	  DISPLAYSURF.blit(playerList[1].photo, (420,520))
 	else:
 	  DISPLAYSURF.blit(playerList[1].photo, (420,300))
 	
-	if playerList[0].state == 'fixDamage' or playerList[0].state == 'twistKick' or playerList[0].state == 'blockKick' or playerList[0].state == 'megaPunch':  
+	if playerList[0].state == 'Heal' or playerList[0].state == 'Flying_Kick' or playerList[0].state == 'Dodge_Kick' or playerList[0].state == 'Uppercut':  
 	  DISPLAYSURF.blit(playerList[0].photo, (300,200))
-	elif playerList[0].state == 'LegsSweep' or playerList[0].state == 'charge':  
+	elif playerList[0].state == 'Sweep' or playerList[0].state == 'charge':  
 	  DISPLAYSURF.blit(playerList[0].photo, (300,400))
-	elif playerList[0].state == 'stun' or playerList[0].state == 'prep' or playerList[0].state == 'leaveGame':  
+	elif playerList[0].state == 'stun' or playerList[0].state == 'prep' or playerList[0].state == 'Quit':  
 	  DISPLAYSURF.blit(playerList[0].photo, (300,270))
 	elif playerList[0].state == 'dead':  
 	  DISPLAYSURF.blit(playerList[0].photo, (100,500))
@@ -948,10 +981,11 @@ def drawPeeps():
 setAttacks()
 makeDeck()
 if checkValues()==True:
-	clear(25)
+	clear(3)
 	for players in range(numberOfPlayers):
 		temp = Player(numberOfMoves,handSize,masterDeck,150+(700*players),str(input('player '+ str(players+1) +' whats your name - ')))	
 		playerList.append(temp)
+		
 	
 	#input-------------------------------------------------------------------------------------------------
 	while len(playerList[0].deck)>0 and len(playerList[1].deck)>0:
