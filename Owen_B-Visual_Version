@@ -28,9 +28,9 @@ odds = []
 
 #button funtionality 
 buttons = []
-buttonText       = ['Done'       ,'Next'       ,'Start'      ]
-buttonTextColour = [[0  ,0  ,0  ],[0  ,0  ,0  ],[0  ,0  ,0  ]]
-buttonBoxColour  = [[255,255,255],[255,255,255],[255,255,255]]
+buttonText       = ['Done'       ,'Next'       ,'Start'      ,'Quit'      ,'Player 2'   ,'Player 1'    ]
+buttonTextColour = [[0  ,0  ,0  ],[0  ,0  ,0  ],[0  ,0  ,0  ],[0  ,0  ,0  ],[0  ,0  ,0  ],[0  ,0  ,0  ]]
+buttonBoxColour  = [[255,255,255],[255,255,255],[255,255,255],[255,0  ,0  ],[255,255,255],[255,255,255]]
 
 
 
@@ -83,6 +83,9 @@ class Player:
 		
 		temp = Button(850-(700*PlayerNumber),90,250,55,buttonText[0],buttonTextColour[0],buttonBoxColour[0]) #make button
 		buttons.append(temp)
+		if attack[len(attack)-1] == 'Quit':
+			temp = Button(575+(PlayerNumber*-150),60,90,120,buttonText[3],buttonTextColour[3],buttonBoxColour[3]) #make button
+			buttons.append(temp)
 		
 		for new in range (10): #ten random cards
 		        temp = Card(40+(920*PlayerNumber),60,105,167,self.hand[new])
@@ -181,7 +184,12 @@ class Player:
 						elif card == len(cards)-1:
 							for button in range(len(buttons)):
 								clickedButton = buttons[button].clicked(mouseX,mouseY)
-								if clickedButton == 'Done':
+								if clickedButton == 'Done' or clickedButton == 'Quit':
+									if clickedButton == 'Quit':
+										for quiting in range(numberOfMoves):
+											if self.moves[quiting] == 'No attack':
+												self.moves[quiting] = 'Quit'
+                                                                
 									done = True #move to the next part of the game
 									still = 0
 									for alls in range(1,len(cards)):#move the card into respective piles
@@ -196,7 +204,7 @@ class Player:
 											if cards[alls].Img != 'back':
 												cards[alls].flipSelect = True
 									break
-								else:
+								elif button == len(buttons)-1:
 									for flipAll in range(1,len(cards)):
 										cards[flipAll].flipSelect = True
 					
@@ -394,7 +402,7 @@ def setAttacks():
 	Uppercut = True
 	speedSpin = False
 	Sweep = True
-	Quit = False
+	Quit = True
 	Heal = True
 	Taunt = True
 	Final_Move = True
@@ -511,9 +519,9 @@ def setAttacks():
 			odds.append('Heal')
 	if Taunt == True:
 		attack.append('Taunt')
-		attackDamage['Taunt'] = 'x2 dmg'
+		attackDamage['Taunt'] = 'x2'
 		attackLength['Taunt'] = 1
-		attackEffect['Taunt'] = 'charge'
+		attackEffect['Taunt'] = 'prep'
 		personImage['Taunt'] = pygame.image.load('Taunt.png')
 		cardImage['Taunt'] = pygame.image.load('Card_Taunt.png')
 		personSize['Taunt'] = [225,420]
@@ -621,12 +629,14 @@ def battle(what,who,when,person):
 			print(playerList[person].name + ' is under the weather')
 		else:
 			print(playerList[person].name + ' is not attacking')
+	elif what == 'dead':
+		print(playerList[person].name +' is knocked out')
+		for stopAttacking in range(when+1,numberOfMoves):
+			playerList[person].moves[stopAttacking] = 'dead'
 	elif what == 'prep':
 		print(playerList[person].name + ' is preparing for an attack')
 	elif what == 'stun':
 		print(playerList[person].name +' is stunned')
-	elif what == 'dead':
-		print(playerList[person].name +' is knocked out')
 	elif what == 'charge':
 		print(playerList[person].name +' is charging up an attack')
 	elif what == 'Punch':
@@ -716,19 +726,19 @@ def battle(what,who,when,person):
 		if playerList[who].moves[when] == what and playerList[who].target[when]==person:
 			print('draw')
 		else:
-                        if playerList[who].moves[when] == 'Dodge_Kick':
-                                playerList[person].moves[when+1] == 'stun'
-                        else:
-                                playerList[who].moves[when+1] = 'stun'
-                                if playerList[who].moves[when+1] == 'prep':
-                                        playerList[who].moves[when+2] = 'stun'
-                                        print(playerList[who].name + ' has lost balence and is now stunned')
-                                elif playerList[who].moves[when] == 'speedSpin':
-                                        for screwed in range(len(playerList[who].moves)-1):	
-                                                playerList[who].moves[screwed] = 'stun'
+			if playerList[who].moves[when] == 'Dodge_Kick':
+				playerList[person].moves[when+1] == 'stun'
+			else:
+				playerList[who].moves[when+1] = 'stun'
+				if playerList[who].moves[when+1] == 'prep':
+					playerList[who].moves[when+2] = 'stun'
+					print(playerList[who].name + ' has lost balence and is now stunned')
+				elif playerList[who].moves[when] == 'speedSpin':
+					for screwed in range(len(playerList[who].moves)-1):	
+						playerList[who].moves[screwed] = 'stun'
 	elif what == 'Quit':
-		print(playerList[person].name + ' '+ what + 'es ' + playerList[person].name)
-		playerList[person].damage(attackDamage[what])
+		print(playerList[person].name + ' '+ what + 's ')
+		playerList[person].damage((len(playerList[person].deck))*intensity)
 	elif what == 'Heal':
 		print(playerList[person].name + ' '+ what + 'es ' + playerList[person].name)
 		for heals in range(round((attackDamage[what]*-1)/intensity)):
@@ -972,6 +982,158 @@ def drawPeeps():
 	else:
 	  DISPLAYSURF.blit(playerList[0].photo, (300,300))
 
+def typeNames():
+	done = False
+	names = ['Type your names plz','Player One','Player Two']
+	selectedPerson = 0
+	
+	temp = Button(850,90,250,55,buttonText[0],buttonTextColour[0],buttonBoxColour[0])
+	buttons.append(temp)
+	for button in range(4,6):
+		temp = Button(500,300+((5-button)*200),250,55,buttonText[button],buttonTextColour[button],buttonBoxColour[button])
+		buttons.append(temp)
+	
+	while done == False:
+		DISPLAYSURF.fill((0,0,0))
+		
+		for button in range(len(buttons)):
+			if button == 3-selectedPerson and selectedPerson != 0:
+				buttons[button].boxColour = [0,175,0]
+			else:
+				buttons[button].boxColour = [255,255,255]
+			buttons[button].display()
+			
+			textFont = pygame.font.Font('freesansbold.ttf', 32)
+			text = textFont.render(str(names[button]), True, (255,255,255))
+			textSize = text.get_rect()                       
+			DISPLAYSURF.blit(text,(500-(textSize[2]/2),(140+(button*200))))
+		
+		for event in pygame.event.get():
+			if event.type == QUIT:
+				pygame.quit()
+				sys.exit()
+			if event.type == MOUSEBUTTONDOWN:
+				mousex, mousey = event.pos
+				for button in range(len(buttons)):
+					clicked = buttons[button].clicked(mousex,mousey)
+					if clicked == 'Player 1':
+						selectedPerson = 1
+					elif clicked == 'Player 2':
+						selectedPerson = 2
+					elif clicked == 'Done':
+						done = True
+
+					
+			if event.type == pygame.KEYDOWN:
+				mod = pygame.key.get_mods()
+				key = pygame.key.name(event.key)
+				if key == 'backspace':
+					names[selectedPerson]= names[selectedPerson][0:len(names[selectedPerson])-1]
+				elif  key == 'return':
+					selectedPerson = 0
+				elif  key == 'space':
+					names[selectedPerson]+= ' '
+				elif len(key) == 1:
+					if mod == 1 or mod == 2 or mod == 8192:
+						if key == 'a':
+							names[selectedPerson]+= 'A'
+						elif key == 'b':
+							names[selectedPerson]+= 'B'
+						elif key == 'c':
+							names[selectedPerson]+= 'C'
+						elif key == 'd':
+							names[selectedPerson]+= 'D'
+						elif key == 'e':
+							names[selectedPerson]+= 'E'
+						elif key == 'f':
+							names[selectedPerson]+= 'F'
+						elif key == 'g':
+							names[selectedPerson]+= 'G'
+						elif key == 'h':
+							names[selectedPerson]+= 'H'
+						elif key == 'i':
+							names[selectedPerson]+= 'I'
+						elif key == 'j':
+							names[selectedPerson]+= 'J'
+						elif key == 'k':
+							names[selectedPerson]+= 'K'
+						elif key == 'l':
+							names[selectedPerson]+= 'L'
+						elif key == 'm':
+							names[selectedPerson]+= 'M'
+						elif key == 'n':
+							names[selectedPerson]+= 'N'
+						elif key == 'o':
+							names[selectedPerson]+= 'O'
+						elif key == 'p':
+							names[selectedPerson]+= 'P'
+						elif key == 'q':
+							names[selectedPerson]+= 'Q'
+						elif key == 'r':
+							names[selectedPerson]+= 'R'
+						elif key == 's':
+							names[selectedPerson]+= 'S'
+						elif key == 't':
+							names[selectedPerson]+= 'T'
+						elif key == 'u':
+							names[selectedPerson]+= 'U'
+						elif key == 'v':
+							names[selectedPerson]+= 'V'
+						elif key == 'w':
+							names[selectedPerson]+= 'W'
+						elif key == 'x':
+							names[selectedPerson]+= 'X'
+						elif key == 'y':
+							names[selectedPerson]+= 'Y'
+						elif key == 'z':
+							names[selectedPerson]+= 'Z'
+						elif key == '`':
+							names[selectedPerson]+= '~'
+						elif key == '1':
+							names[selectedPerson]+= '!'
+						elif key == '2':
+							names[selectedPerson]+= '@'
+						elif key == '3':
+							names[selectedPerson]+= '#'
+						elif key == '4':
+							names[selectedPerson]+= '$'
+						elif key == '5':
+							names[selectedPerson]+= '%'
+						elif key == '6':
+							names[selectedPerson]+= '^'
+						elif key == '7':
+							names[selectedPerson]+= '&'
+						elif key == '8':
+							names[selectedPerson]+= '*'
+						elif key == '9':
+							names[selectedPerson]+= '('
+						elif key == '0':
+							names[selectedPerson]+= ')'
+						elif key == '-':
+							names[selectedPerson]+= '_'
+						elif key == '=':
+							names[selectedPerson]+= '+'
+						elif key == '[':
+							names[selectedPerson]+= '{'
+						elif key == ']':
+							names[selectedPerson]+= '}'
+						elif key == ';':
+							names[selectedPerson]+= ':'
+						elif key == ',':
+							names[selectedPerson]+= '<'
+						elif key == '.':
+							names[selectedPerson]+= '>'
+						elif key == '/':
+							names[selectedPerson]+= '?'    
+					else:
+						names[selectedPerson]+= key
+				
+		
+		pygame.display.update()
+		fpsClock.tick(FPS) 
+	for kill in range(len(buttons)):
+	   del buttons[0]
+	return names[1],names[2]
 
 #======================================================================================================
 #run===================================================================================================
@@ -982,8 +1144,9 @@ setAttacks()
 makeDeck()
 if checkValues()==True:
 	clear(3)
+	finalNames = typeNames()
 	for players in range(numberOfPlayers):
-		temp = Player(numberOfMoves,handSize,masterDeck,150+(700*players),str(input('player '+ str(players+1) +' whats your name - ')))	
+		temp = Player(numberOfMoves,handSize,masterDeck,150+(700*players),finalNames[players])	
 		playerList.append(temp)
 		
 	
@@ -1013,8 +1176,8 @@ if checkValues()==True:
 	for players in range(numberOfPlayers):
 		if len(playerList[players].deck) == 0:
 			print(playerList[players].name + 'loses')
-			pygame.quit()
-			sys.exit()
+	pygame.quit()
+	sys.exit()
 else:
 	print('Some values in your game are corrupted')
 	
