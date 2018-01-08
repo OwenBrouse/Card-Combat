@@ -62,12 +62,12 @@ class Card:
         "draws the card"
         image = pygame.transform.scale(cardImage[self.Img], (self.width, self.height))
 
-        DISPLAYSURF.blit(image, ((self.x-(self.width/2)),(self.y-(self.height/2))))
+        DISPLAYSURF.blit(image, ((self.xPos-(self.width/2)),(self.yPos-(self.height/2))))
 
   def clicked(self,mX,mY):
         "Detemines if the card has been clicked"
-        if mY>(self.y-(self.height/2)) and mY<(self.y+(self.height/2)): 
-             if mX >(self.x-(self.width/2)) and mX <(self.x+(self.width/2)):
+        if mY>(self.yPos-(self.height/2)) and mY<(self.yPos+(self.height/2)): 
+             if mX >(self.xPos-(self.width/2)) and mX <(self.xPos+(self.width/2)):
                 return True
 
   def flip (self):
@@ -86,10 +86,10 @@ class Card:
             
         elif self.width < flipSpeed+1: #is the flip halfway
             self.flipCount *= 1000 
-            if self.Img == -1:
-                self.Img = self.Id
+            if self.img == self.frontImg:
+                self.img = self.backImg
             else:
-                self.Img = -1
+                self.img = self.frontImg
 
   def setMove(self, xDest, yDest):
     distX = xDest - self.xPos
@@ -176,8 +176,8 @@ class Button:
 intensity = 100
 
 #PLAYERS
-p1 = Fighter(20 * intensity, 0, 'Robert', 0, 0, 0)
-p2 = Fighter(20 * intensity, 0, 'Owen', 0, 0, 0)
+p1 = Fighter(20 * intensity, 0, 'Player1', 0, 0, 0)
+p2 = Fighter(20 * intensity, 0, 'Player2', 0, 0, 0)
 
 #COMBAT
 punchDmg = 1 * intensity
@@ -197,6 +197,7 @@ p1Hand = []
 p1Cards = []
 p2Hand = []
 p2Cards = []
+destinations = [[100,200],[300,200],[500,200],[700,200],[900,200],[100,200],[300,200],[500,200],[700,200],[900,200]]
 deck1 = [0] * p1.health
 for i in range(len(deck1)):
   deck1[i] = random.randint(1, len(choices[0]))
@@ -224,119 +225,19 @@ buttonText       = ['Done','Menu','Settings','Game','Tutorial']
 buttonTextColour = [[0  ,0  ,0  ]]
 buttonBoxColour  = [[255,255,255]]
 
-
-
-def Draw(numOfCards, p1H, p2H):
+def Draw(numOfCards, player, hand, deck):
   "Draws a number of cards (depending on their existing hand) to reset each player's hand to 10."
-  if p1.health <= 10 and p1.health > 0:
+  if player.health <= 10 and player.health > 0:
     for i in range(p1.health - len(p1Hand)):
-      p1H.append(deck1[0])
-      deck1.remove(deck1[0])
-  elif p1.health > 10:
+      hand.append(deck[0])
+      deck.remove(deck[0])
+  elif player.health > 10:
     for i in range(numOfCards - len(p1Hand)):
-      p1H.append(deck1[0])
-      deck1.remove(deck1[0])
-  while len(deck1) < p1.health:
-    deck1.append(random.randint(1, len(choices[0])))
-  
-  if p2.health <= 10 and p2.health > 0:
-    for i in range(p2.health - len(p2Hand)):
-      p2H.append(deck2[0])
-      deck2.remove(deck2[0])
-  elif p2.health > 10:
-    for i in range(numOfCards - len(p2Hand)):
-      p2H.append(deck2[0])
-      deck2.remove(deck2[0])
-  while len(deck2) < p2.health:
-    deck2.append(random.randint(1, len(choices[0])))
-  return p1H, p2H
-  
-
-def Input(numOfTurns, p1H, p2H):
-  #Picks the moves.
-  p1T = []
-  savedHand1 = []
-  for x in range(len(p1H)):
-    savedHand1.append(p1H[x])
-  while len(p1T) != numOfTurns:
-    print('\n' + p1.name + ' picks!')
-  
-    #Displays potential moves.
-    for i in range(len(choices[0])):
-      print(str(choices[0][i]) + ' = ' + choices[1][i] + ' (' + str(p1MoveCounts[i]) + ')')
-    print('\nPick ' + str(numOfTurns) + ' moves.')
-    
-    #Player input.
-    p1T = [int(s) for s in input().split()]  
-    if len(p1T) != numOfTurns:
-      print('You did not pick five moves.')
-    else:
-      #Verifies that all cards are in the player's hand, or that the player is holding.
-      for i in range(numOfTurns):
-        if p1T[i] in p1H:
-          print('Move verified!')
-          p1H.pop(p1H.index(p1T[i]))
-          print(p1H)
-        elif p1T[i] == 0:
-          print('Move verified!')
-          print(p1H)
-        else:
-          print('Your selected card was not in your hand. Try again.')
-          p1T = []
-          p1H = savedHand1
-          break
-  
-  #Spacer.
-  for i in range(90):
-    print('')
-  
-  #Picks the moves.
-  p2T = []
-  savedHand2 = []
-  for x in range(len(p2H)):
-    savedHand2.append(p2H[x])
-  while len(p2T) != numOfTurns:
-    print('\n' + p2.name + ' picks!')
-  
-    #Displays potential moves.
-    for i in range(len(choices[0])):
-      print(str(choices[0][i]) + ' = ' + choices[1][i] + ' (' + str(p2MoveCounts[i]) + ')')
-    print('\nPick ' + str(numOfTurns) + ' moves.')
-    
-    #Player input.
-    p2T = [int(s) for s in input().split()]  
-    if len(p2T) != numOfTurns:
-      print('You did not pick five moves.')
-    else:
-      for i in range(numOfTurns):
-        if p2T[i] in p2H:
-          print('Move verified!')
-          p2H.pop(p2H.index(p2T[i]))
-          print(p2H)
-        elif p2T[i] == 0:
-          print('Move verified!')
-          print(p2H)
-        else:
-          print('Your selected card was not in your hand. Try again.')
-          p2T = []
-          p2H = savedHand2
-          break
-  
-  #Spacer.
-  for i in range(90):
-    print('')
-
-  for card in range(p1T):
-    for x in range(p1Cards):
-      if card == p1Cards[x].atkType:
-        p1Cards.pop(x)
-  for card in range(p2T):
-    for x in range(p2Cards):
-      if card == p2Cards[x].atkType:
-        p2Cards.pop(x)
-  
-  
-  return p1T, p2T, p1H, p2H
+      hand.append(deck[0])
+      deck.remove(deck[0])
+  while len(deck1) < player.health:
+    deck.append(random.randint(1, len(choices[0])))
+  return hand, deck
 
 def Outcomes(c1, c2, cond1, cond2, dmgM1, dmgM2, turn):
   'Calculates the outcome of combat.'
@@ -586,7 +487,8 @@ def Outcomes(c1, c2, cond1, cond2, dmgM1, dmgM2, turn):
   return cond1, cond2, dmgM1, dmgM2
 
 hasDrawn = False
-  
+hasDealt = False
+locked = False
 while True:  
   DISPLAYSURF.blit(background,(0,0))
 
@@ -594,40 +496,133 @@ while True:
     #MainMenu
 
     hasDrawn = False
-    
+    hasDealt = False
+    firstMove = False
+    locked = False
+    for i in range(2):
+      temp = Button(850-(700*i),90,250,55,buttonText[0],buttonTextColour[0],buttonBoxColour[0]) #make button
+      buttons.append(temp)
   elif screen == 1:
     #Settings
-    
+    print()
   elif screen == 2:
     #Player1Choice
 
     background = cardBackground
 
-    temp = Button(850-(700*numPlayer),90,250,55,buttonText[0],buttonTextColour[0],buttonBoxColour[0]) #make button
-    buttons.append(temp)
-
-    for inputNumber in range(5): #draw 5 rectangles
-      pygame.draw.rect(DISPLAYSURF, (0,0,0),(80+(90*inputNumber)+(400*numPlayer),0,80,120))
-      textFont = pygame.font.Font('freesansbold.ttf', 32)
-      text = textFont.render(str(inputNumber+1), True, (255,255,255))
-      textSize = text.get_rect()
-      DISPLAYSURF.blit(text,((120+(90*inputNumber)+(400*numPlayer))-(textSize[2]/2),60-(textSize[2]/2)))
-
     deckCard = Card(40,65,0,1,70,111)
+    deckCard.display()
+    increments = []
 
-    if hasDrawn == False:
-      p1Hand, p2Hand = Draw(10, p1Hand, p2Hand)
-      hasDrawn = True
+    p1Turns = [0] * 5
 
-    for event in pygame.event.get():
-      if event.type == QUIT:
-        pygame.quit()
-        sys.exit()
-      elif event.type == MOUSEMOTION:
-        mousex, mousey = event.pos
+    while locked == False:
+      DISPLAYSURF.blit(background, (0,0))
+
+      for inputNumber in range(turns): #draw 5 rectangles
+        pygame.draw.rect(DISPLAYSURF, (0,0,0),(80+(90*inputNumber)+(400*numPlayer),0,80,120))
+        textFont = pygame.font.Font('freesansbold.ttf', 32)
+        text = textFont.render(str(inputNumber+1), True, (255,255,255))
+        textSize = text.get_rect()
+        DISPLAYSURF.blit(text,((120+(90*inputNumber)+(400*numPlayer))-(textSize[2]/2),60-(textSize[2]/2)))
+
+      deckCard.display()
+      buttons[0].display()
+
+      if hasDrawn == False:
+        p1Hand, deck1 = Draw(10, p1, p1Hand, deck1)
+        hasDrawn = True
+
+      if hasDealt == False and hasDrawn == True:
+        p1Cards.clear()
+        increments.clear()
+        for card in p1Hand:
+          p1Cards.append(Card(40,65,0,card,70,111))
+        i = 0
+        for card in p1Cards:
+          card.display()
+          tempXinc, tempYinc = card.setMove(destinations[i][0], destinations[i][1])
+          increments.append([tempXinc, tempYinc])
+          i += 1
+        hasDealt = True
+      if firstMove == False:
         for card in range(len(p1Cards)):
-          if p1Cards[card].selected == True:
-            p1Cards[card].moveToSetPos(mousex,mousey)
+          if p1Cards[card].compSelect == True:
+            p1Cards[card].move(increments[card][0], increments[card][1], destinations[card][0], destinations[card][1])
+      still = 0
+      for card in range(len(p1Cards)):
+        if p1Cards[card].compSelect == True:
+          p1Cards[card].move(increments[card][0], increments[card][1], destinations[card][0], destinations[card][1])
+        if p1Cards[card].flipSelect == True:
+          p1cards[card].flip()
+        if p1Cards[card].flipSelect == False and p1Cards[card].compSelect == False and p1Cards[card].selected == False:
+          still += 1
+        p1Cards[card].display()
+
+      for event in pygame.event.get():
+        if event.type == QUIT:
+          pygame.quit()
+          sys.exit()
+        elif event.type == MOUSEMOTION:
+          mousex, mousey = event.pos
+          for card in range(len(p1Cards)):
+            if p1Cards[card].selected == True:
+              p1Cards[card].moveToSetPos(mousex,mousey)
+
+        elif event.type == MOUSEBUTTONUP:
+          mousex, mousey = event.pos
+          for card in range(len(p1Cards)):
+            if p1Cards[card].selected == True:
+              for fakeInputNumber in range(5):
+                if mouseY < 120:
+                  if mouseX > (80+(90*fakeInputNumber)) and mouseX < (160 + (90*fakeInputNumber)) and p1Turns[fakeInputNumber] == 0:
+                    p1Cards[card].moveToSetPos((120+(90*fakeInputNumber)),60)
+                    p1Turns[fakeInputNumber] = p1Cards[card].atkType
+                  elif fakeInputNumber == 0:
+                    p1Cards[card].yPos = 200
+            p1Cards[card].selected = False
+
+        elif event.type == MOUSEBUTTONDOWN:
+          mouseX,mouseY = event.pos
+          for card in range(len(p1Cards)):
+            if p1Cards[card].clicked(mouseX,mouseY) == True:
+              for fakeInputNumber in range(5):
+                if p1Cards[card].xPos == (120+(90*fakeInputNumber)) and p1Cards[card].yPos == 60:
+                  p1Turns[fakeINputNumber] = 0
+              p1Cards[card].selected = True
+              break
+          for button in range(len(buttons)):
+            if buttons[button].clicked(mouseX,mouseY) == 'Done':
+              locked = True
+              still = 0
+              increments = []
+              for alls in range(len(p1Cards)):
+                ix, iy = p1Cards[alls].setMove(40,65)
+                increments.append([ix,iy])
+                if p1Cards[alls].img == frontImg:
+                  p1Cards[alls].flipSelect = True
+              cardsAtDest = 0
+              while cardsAtDest < len(p1Cards):
+                DISPLAYSURF.blit(background, (0,0))
+                for inputNumber in range(turns): #draw 5 rectangles
+                  pygame.draw.rect(DISPLAYSURF, (0,0,0),(80+(90*inputNumber)+(400*numPlayer),0,80,120))
+                  textFont = pygame.font.Font('freesansbold.ttf', 32)
+                  text = textFont.render(str(inputNumber+1), True, (255,255,255))
+                  textSize = text.get_rect()
+                  DISPLAYSURF.blit(text,((120+(90*inputNumber)+(400*numPlayer))-(textSize[2]/2),60-(textSize[2]/2)))
+                deckCard.display()
+                buttons[0].display()
+                for card in range(len(p1Cards)):
+                  p1Cards[card].move(increments[card][0],increments[card][1],40,65)
+                  p1Cards[card].display()
+                  if p1Cards[card].xPos == 40 and p1Cards[card].yPos == 65:
+                    cardsAtDest += 1
+                pygame.display.update()
+                fpsClock.tick
+                
+      pygame.display.update()
+      fpsClock.tick()
+      
 
   elif screen == 3:
     #Player2Choice
@@ -645,10 +640,6 @@ while True:
       DISPLAYSURF.blit(text,((120+(90*inputNumber)+(400*numPlayer))-(textSize[2]/2),60-(textSize[2]/2)))
 
     deckCard = Card(960,65,0,1,70,111)
-
-    
-    
-    for card in range(p1Hand)
     
     for event in pygame.event.get():
       if event.type == QUIT:
@@ -657,16 +648,18 @@ while True:
       elif event.type == MOUSEMOTION:
         mousex, mousey = event.pos
         for card in range(len(p2Cards)):
-          if p2Cards[card].selected == True:
+          if p2Cards[card]. == True:
             p2Cards[card].moveToSetPos(mousex,mousey)
 
   elif screen == 4:
     #GameScreen
     hasDrawn = False
+    hasDealt = False
+    locked = False
     
   elif screen == 5:
     #HowToPlay
-    
+    print()
   
   for event in pygame.event.get():
     if event.type == QUIT:
@@ -680,4 +673,4 @@ while True:
     
   
   pygame.display.update()
-  
+  fpsClock.tick()
