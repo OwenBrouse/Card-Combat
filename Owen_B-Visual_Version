@@ -1,4 +1,3 @@
-#Pygame Game fundimentals
 import pygame, sys, math, random
 from pygame.locals import *
 pygame.init()
@@ -28,14 +27,16 @@ odds = []
 
 #button funtionality 
 buttons = []
-buttonText       = ['Done'       ,'Next'       ,'Start'      ,'Quit'      ,'$Player#Two$','xXPlayerOneXx']
-buttonTextColour = [[0  ,0  ,0  ],[0  ,0  ,0  ],[0  ,0  ,0  ],[0  ,0  ,0  ],[0  ,0  ,0  ],[0  ,0  ,0  ]  ]
-buttonBoxColour  = [[255,255,255],[255,255,255],[255,255,255],[255,0  ,0  ],[255,255,255],[255,255,255]  ]
+buttonText       = ['Done'       ,'Next'       ,'Start'      ,'Quit'      ,'$Player#Two$','xXPlayerOneXx','Play'       ,'How To'     ,'Credits'    ,'Settings'   ,'Exit'       ,'Complexity' ,'intensity'  ,'Quit Button','Health'     ]
+buttonTextColour = [[0  ,0  ,0  ],[0  ,0  ,0  ],[0  ,0  ,0  ],[0  ,0  ,0  ],[0  ,0  ,0  ],[0  ,0  ,0  ]  ,[0  ,0  ,0  ],[0  ,0  ,0  ],[0  ,0  ,0  ],[0  ,0  ,0  ],[0  ,0  ,0  ],[0  ,0  ,0  ],[0  ,0  ,0  ],[255,255,255],[0  ,0  ,0  ]]
+buttonBoxColour  = [[255,255,255],[255,255,255],[255,255,255],[255,0  ,0  ],[255,255,255],[255,255,255]  ,[255,255,255],[255,255,255],[255,255,255],[255,255,255],[255,255,255],[255,255,255],[255,255,255],[0  ,255,0  ],[255,255,255]]
 
 
 
 #Attacking funtionality 
+complexity = 0
 attack = []
+quitButton = True
 attackDamage = dict()
 attackLength = dict()
 attackEffect = dict()
@@ -95,7 +96,8 @@ class Player:
 		        	numberOfDeletedCards+=1
 		        cards[len(cards)-1].moveTo(150+(((len(cards)-2)%5)*175),300+(((len(cards)-2)//5)*250))
 		
-		
+		        backPhoto = pygame.image.load('Card_Choice_Background.png')
+		        backPhoto = pygame.transform.scale(backPhoto,(1000,700))
 		
 		
 		while done == False or still != len(cards)-1:
@@ -125,11 +127,16 @@ class Player:
 					still += 1 #counts the ammout of cards doing nothing
 				#print(cards[drawCard].height)
 					if cards[drawCard].Id == 'speedSpin':
-						actualLength = 0
-						for move in range(numberOfMoves):
-							if playerList[PlayerNumber].moves[move] == 'No attack' or playerList[PlayerNumber].moves[move] == 'speedSpin':
-								actualLength += 1
-						attackLength[cards[drawCard].Id] = actualLength
+						if playerList[PlayerNumber].moves[4] == 'No attack' or playerList[PlayerNumber].moves[4] == 'speedSpin' :
+							actualLength = 0
+							for move in range(numberOfMoves-1,-1,-1):
+								if playerList[PlayerNumber].moves[move] == 'No attack' or playerList[PlayerNumber].moves[move] == 'speedSpin':
+									actualLength += 1
+##								else:
+##									break
+							attackLength[cards[drawCard].Id] = actualLength
+						else:
+							attackLength[cards[drawCard].Id] = 6   
 				cards[drawCard].display()
 			cards[0].display()
 	
@@ -403,14 +410,26 @@ def setAttacks():
 	Punch = True
 	Kick = True
 	Dodge_Kick = True
-	Flying_Kick = True
-	Uppercut = True
-	speedSpin = True
-	Sweep = True
-	Quit = True
-	Heal = True
-	Taunt = True
-	Final_Move = True
+	Flying_Kick = False
+	Uppercut = False
+	speedSpin = False
+	Sweep = False
+	Quit = False
+	Heal = False
+	Taunt = False
+	Final_Move = False
+	if complexity > 0:
+		Heal = True
+		Final_Move = True
+		Uppercut = True
+	if complexity > 1:
+		Taunt = True
+		Sweep = True
+		Flying_Kick = True
+	if complexity > 2:
+		  speedSpin = True
+	if quitButton == True:
+		  Quit = True
 
 	
 	personImage['stun'] = pygame.image.load('Stun.png')
@@ -425,6 +444,9 @@ def setAttacks():
 	cardImage['charge'] = pygame.image.load('Card_Charging.png')
 	personSize['charge'] = [275,350]
 
+	personImage['Victory'] = pygame.image.load('Victory.png')
+	personSize['Victory'] = [275,400]
+	
 	cardImage['back'] = pygame.image.load('Card_Back.png')
 	cardImage['health'] = pygame.image.load('Card_Health.png')
 
@@ -576,7 +598,7 @@ def battle(what,who,when,person):
 		#what		=	the attack bieing performed
 		#who		=	what player is being attacked
 		#when		=	what round/section of a list that is currently happening 
-		#person	        =	what player is doinf the attack
+		#person	        =	what player is doing the attack
 	if len(playerList[person].deck) == 0:
 		for stopAttacking in range(when+1,numberOfMoves):
 			playerList[person].moves[stopAttacking] = 'dead'
@@ -770,7 +792,8 @@ def battle(what,who,when,person):
 			print('draw')
 		else:
 			if when != numberOfMoves-1:
-				playerList[who].damageMultiplyer = 2
+				if playerList[who].moves[when] == 'Heal' or playerList[who].moves[when] == 'Quit' or playerList[who].moves[when] == 'charge' or playerList[who].moves[when] == 'prep' or playerList[who].moves[when] == 'dead' or playerList[who].moves[when] == 'stun' or playerList[who].moves[when] == 'Dodge_Kick':
+					playerList[who].damageMultiplyer = 2
 	else:
 		print('value error')
 	if what != 'Taunt' or when == 4:
@@ -816,7 +839,12 @@ def animate():
 		if gameMode == 1:#stage 1: deal the cards
 		
 			DISPLAYSURF.blit(backPhoto, (0,0))  
-			
+
+			for event in pygame.event.get():
+				if event.type == QUIT:
+					pygame.quit()
+					sys.exit()
+					
 			still = 0    
 			for drawCard in range(0,len(cards)):
 				cards[drawCard].display()
@@ -864,6 +892,11 @@ def animate():
 		
 			DISPLAYSURF.blit(backPhoto, (0,0))    #image
 			
+			for event in pygame.event.get():
+				if event.type == QUIT:
+					pygame.quit()
+					sys.exit()
+					
 			if still == len(cards) :
 				if count<5:
 					for numPlayer in range(numberOfPlayers):
@@ -924,10 +957,17 @@ def animate():
 			
 		
 		elif gameMode == 1.75:#stage 3: waiting for input
+                        
+			DISPLAYSURF.blit(backPhoto, (0,0))    #image
 		
 			for drawCard in range(0,len(cards)):
 				cards[drawCard].display()  
 			buttons[0].display()
+
+			if len(playerList[0].deck)==0 and len(playerList[1].deck)>0:
+				playerList[1].state = 'Victory'
+			if len(playerList[0].deck)>0 and len(playerList[1].deck)==0:
+				playerList[0].state = 'Victory'
 			
 			for event in pygame.event.get():
 				if event.type == QUIT:
@@ -945,21 +985,24 @@ def animate():
 								del buttons[0]
 							gameMode = 2
 			
-		for names in range(numberOfPlayers):
-			textFont = pygame.font.Font('freesansbold.ttf', 60)#Print Name
-			text = textFont.render(playerList[names].name, True, (255,0,0))
+		for info in range(numberOfPlayers):
+			textFont = pygame.font.Font('freesansbold.ttf', 40)#Print Name
+			text = textFont.render(playerList[info].name, True, (255,0,0))
 			textSize = text.get_rect()
-			DISPLAYSURF.blit(text,((200+(600*names))-(textSize[2]/2),200))
+
+			pygame.draw.rect(DISPLAYSURF, (255,255,255),((200+(600*info))-(textSize[2]/2),200,textSize[2],textSize[3]))
+			DISPLAYSURF.blit(text,((200+(600*info))-(textSize[2]/2),200))
 			
 			textFont = pygame.font.Font('freesansbold.ttf', 32)#print Health (on the card)
-			text = textFont.render(str(len(playerList[names].deck)*intensity), True, (255,255,255))
+			text = textFont.render(str(len(playerList[info].deck)*intensity), True, (255,255,255))
 			textSize = text.get_rect()                       
-			DISPLAYSURF.blit(text,((40+(920*names))-(textSize[2]/2),55))
+			DISPLAYSURF.blit(text,((40+(920*info))-(textSize[2]/2),55))
+			
 
-			textFont = pygame.font.Font('freesansbold.ttf', 150)#print Damage
-			text = textFont.render(playerList[names].damageString, True, (255,255,255))
+			textFont = pygame.font.Font('freesansbold.ttf', 80)#print Damage
+			text = textFont.render(playerList[info].damageString, True, (255,255,255))
 			textSize = text.get_rect()                       
-			DISPLAYSURF.blit(text,((150+(700*names))-(textSize[2]/2),500))
+			DISPLAYSURF.blit(text,((150+(700*info))-(textSize[2]/2),500))
 				
 		playerList[0].photo = pygame.transform.scale(personImage[playerList[0].state], (personSize[playerList[0].state][0],personSize[playerList[0].state][1]))
 		playerList[0].photo = pygame.transform.flip(playerList[0].photo,flipP1,False)
@@ -978,7 +1021,7 @@ def drawPeeps():
 	  DISPLAYSURF.blit(playerList[1].photo, (420,200))
 	elif playerList[1].state == 'Sweep' or playerList[1].state == 'charge':  
 	  DISPLAYSURF.blit(playerList[1].photo, (420,400))
-	elif playerList[1].state == 'stun' or playerList[1].state == 'prep':  
+	elif playerList[1].state == 'stun' or playerList[1].state == 'prep' or playerList[1].state == 'Victory':  
 	  DISPLAYSURF.blit(playerList[1].photo, (420,270))
 	elif playerList[1].state == 'Quit':  
 	  DISPLAYSURF.blit(playerList[1].photo, (370,270))
@@ -991,7 +1034,7 @@ def drawPeeps():
 	  DISPLAYSURF.blit(playerList[0].photo, (300,200))
 	elif playerList[0].state == 'Sweep' or playerList[0].state == 'charge':  
 	  DISPLAYSURF.blit(playerList[0].photo, (300,400))
-	elif playerList[0].state == 'stun' or playerList[0].state == 'prep' or playerList[0].state == 'Quit':  
+	elif playerList[0].state == 'stun' or playerList[0].state == 'prep' or playerList[0].state == 'Quit' or playerList[0].state == 'Victory':  
 	  DISPLAYSURF.blit(playerList[0].photo, (300,270))
 	elif playerList[0].state == 'dead':  
 	  DISPLAYSURF.blit(playerList[0].photo, (100,500))
@@ -999,8 +1042,8 @@ def drawPeeps():
 	  DISPLAYSURF.blit(playerList[0].photo, (300,300))
 
 def typeNames():
-	done = False
-	names = ['TYPE YOUR NAMES','','']
+	named = False
+	names = ['TYPE YOUR NAMES','xXPlayerOneXx','$Player#Two$']
 	selectedPerson = 0
 	backPhoto = pygame.image.load('Card_Choice_Background.png')
 	
@@ -1011,7 +1054,7 @@ def typeNames():
 	temp = Button(500,275,500,75,buttonText[5],buttonTextColour[5],buttonBoxColour[5])
 	buttons.append(temp)
 	
-	while done == False:
+	while not named:
 
 		DISPLAYSURF.blit(backPhoto,(0,0))
 		
@@ -1036,12 +1079,16 @@ def typeNames():
 				mousex, mousey = event.pos
 				for button in range(len(buttons)):
 					clicked = buttons[button].clicked(mousex,mousey)
-					if clicked == 'xXPlayerOneXx':
+					if clicked == names[1]:
 						selectedPerson = 1
-					elif clicked == '$Player#Two$':
+						if names[1] == 'xXPlayerOneXx':
+							names[1] = ''
+					elif clicked == names[2]:
 						selectedPerson = 2
+						if names[2] == '$Player#Two$':
+							names[2] = ''
 					elif clicked == 'Done':
-						done = True
+						named = True
 
 					
 			if event.type == pygame.KEYDOWN:
@@ -1153,53 +1200,274 @@ def typeNames():
 		fpsClock.tick(FPS) 
 	for kill in range(len(buttons)):
 	   del buttons[0]
+	if names[1] == '':
+	   names[1] = '#1 butthead'
+	if names[2] == '':
+	   names[2] = '2% smart'
 	return names[1],names[2]
 
+def Menu():
+	backPhoto = pygame.image.load('TITLESCREEN.png')
+	backPhoto = pygame.transform.scale(backPhoto,(1000,700))
+	for titleButton in range(6,11):
+		temp = Button(500,260+(100*(titleButton-6)),300,75,buttonText[titleButton],buttonTextColour[titleButton],buttonBoxColour[titleButton])
+		buttons.append(temp) 
 #======================================================================================================
 #run===================================================================================================
 
 
 #setup-------------------------------------------------------------------------------------------------
-setAttacks()
-makeDeck()
-if checkValues()==True:
-	clear(3)
-	finalNames = typeNames()
-	for players in range(numberOfPlayers):
-		temp = Player(numberOfMoves,handSize,masterDeck,150+(700*players),finalNames[players])	
-		playerList.append(temp)
+Menu()
+while True:
+
+	for button in range(len(buttons)):
+		buttons[button].display()
+        
+	backPhoto = pygame.image.load('TITLESCREEN.png')
+	backPhoto = pygame.transform.scale(backPhoto,(1000,700))
+	DISPLAYSURF.blit(backPhoto,(0,0))
 		
+	for event in pygame.event.get():
+		if event.type == QUIT:
+			pygame.quit()
+			sys.exit()
+		if event.type == MOUSEBUTTONDOWN:
+			mousex, mousey = event.pos
+			for button in range(len(buttons)):
+				clicked = buttons[button].clicked(mousex,mousey)
+				if clicked == 'Settings':
+					backPhoto = pygame.image.load('Card_Choice_Background.png')
+					backPhoto = pygame.transform.scale(backPhoto,(1000,900))
+					for kill in range(len(buttons)):
+						del buttons[0]
+
+						
+					temp = Button(740,425,400,50,buttonText[12] + ' -',buttonTextColour[12],buttonBoxColour[12])
+					buttons.append(temp)
+					temp = Button(740,500,400,50,buttonText[12] + ' --',buttonTextColour[12],buttonBoxColour[12])
+					buttons.append(temp)
+					temp = Button(740,575,400,50,buttonText[12] + ' ---',buttonTextColour[12],buttonBoxColour[12])
+					buttons.append(temp)
+					temp = Button(740,650,400,50,buttonText[12] + ' ----',buttonTextColour[12],buttonBoxColour[12])
+					buttons.append(temp)
+					
+					temp = Button(740,275,400,50,buttonText[12] + ' +',buttonTextColour[12],buttonBoxColour[12])
+					buttons.append(temp)
+					temp = Button(740,200,400,50,buttonText[12] + ' ++',buttonTextColour[12],buttonBoxColour[12])
+					buttons.append(temp)
+					temp = Button(740,125,400,50,buttonText[12] + ' +++',buttonTextColour[12],buttonBoxColour[12])
+					buttons.append(temp)
+					temp = Button(740,50 ,400,50,buttonText[12] + ' ++++',buttonTextColour[12],buttonBoxColour[12])
+					buttons.append(temp)
+
+
+					temp = Button(400,125,200,175,buttonText[13],buttonTextColour[13],buttonBoxColour[13])
+					buttons.append(temp)
+					temp = Button(150,125,200,175,buttonText[11],buttonTextColour[11],buttonBoxColour[11])
+					buttons.append(temp)
+					temp = Button(400,425,200,175,buttonText[14] + ' up',buttonTextColour[14],buttonBoxColour[14])
+					buttons.append(temp)
+					temp = Button(150,425,200,175,buttonText[14] + ' down',buttonTextColour[14],buttonBoxColour[14])
+					buttons.append(temp)
+					temp = Button(150,650,125,75,buttonText[0],buttonTextColour[0],buttonBoxColour[0])
+					buttons.append(temp)
+					learning = True
+					while learning:
+                                                
+						DISPLAYSURF.blit(backPhoto,(0,-200))
+
+						textFont = pygame.font.Font('freesansbold.ttf', 100)#intensity
+						text = textFont.render(str(intensity), True, (255,0,0))
+						textSize = text.get_rect()                       
+						DISPLAYSURF.blit(text,(750-(textSize[2]/2),300))
+						textFont = pygame.font.Font('freesansbold.ttf', 100)#Complexity
+						text = textFont.render(str(complexity), True, (255,0,0))
+						textSize = text.get_rect()        
+						DISPLAYSURF.blit(text,(150-(textSize[2]/2),225))
+						textFont = pygame.font.Font('freesansbold.ttf', 75)#Quit
+						text = textFont.render(str(quitButton), True, (255,0,0))
+						textSize = text.get_rect()        
+						DISPLAYSURF.blit(text,(400-(textSize[2]/2),225))
+						textFont = pygame.font.Font('freesansbold.ttf', 75)#health
+						text = textFont.render(str(deckSize), True, (255,0,0))
+						textSize = text.get_rect()        
+						DISPLAYSURF.blit(text,(280-(textSize[2]/2),530))
 	
-	#input-------------------------------------------------------------------------------------------------
-	while len(playerList[0].deck)>0 and len(playerList[1].deck)>0:
-		clear(10)
-		for player in range(len(playerList)):             
-			playerList[player].makeHand()
-			#playerList[player].info()
-			playerList[player].planMoves(player)
-		
-			if numberOfPlayers > 2:
-				playerList[player].planTarget(playerList)
-			else:
-				playerList[1].target = [0]*numberOfMoves
-				playerList[0].target = [1]*numberOfMoves
-		
-			
-		
-		for players in range(numberOfPlayers):
-			print(playerList[players].name + ' is at '+ str((len(playerList[players].deck))*intensity))
-		animate()
-	
-	#end+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-	for players in range(numberOfPlayers):
-		print(playerList[players].name, len(playerList[players].deck),sep=(' - '),end=('.....................'+"\n"))	
-	for players in range(numberOfPlayers):
-		if len(playerList[players].deck) == 0:
-			print(playerList[players].name + 'loses')
-	pygame.quit()
-	sys.exit()
-else:
-	print('Some values in your game are corrupted')
-	
-	
+						for button in range(len(buttons)):
+								buttons[button].display()
+				
+						for event in pygame.event.get():
+							if event.type == QUIT:
+								pygame.quit()
+								sys.exit()
+							if event.type == MOUSEBUTTONDOWN:
+								mousex, mousey = event.pos
+								for button in range(len(buttons)):
+									clicked2 = buttons[button].clicked(mousex,mousey)
+									if clicked2 == 'Done':
+										learning = False
+										for kill in range(len(buttons)):
+											del buttons[0]
+									elif clicked2 == 'Complexity':
+										if complexity < 3:
+											complexity+=1
+										else:
+											complexity = 0
+											
+										if complexity == 0:
+											buttons[button].boxColour = [255,255,255]
+										elif complexity == 1:
+											buttons[button].boxColour = [255,255,0  ]
+										elif complexity == 2:
+											buttons[button].boxColour = [255,155,0  ]
+										elif complexity == 3:
+											buttons[button].boxColour = [255,0  ,0  ]
+											
+									elif clicked2 == 'Health up':
+										deckSize += 1
+									elif clicked2 == 'Health down':
+										deckSize -= 1
+                                                                                        
+									elif clicked2 == 'intensity -':
+										intensity -= 1
+									elif clicked2 == 'intensity --':
+										intensity -= 10
+									elif clicked2 == 'intensity ---':
+										intensity -= 100
+									elif clicked2 == 'intensity ----':
+										intensity -= 1000
+									elif clicked2 == 'intensity +':
+										intensity += 1
+									elif clicked2 == 'intensity ++':
+										intensity += 10
+									elif clicked2 == 'intensity +++':
+										intensity += 100
+									elif clicked2 == 'intensity ++++':
+										intensity += 1000
+									elif clicked2 == 'Quit Button':
+										if quitButton == True:
+											buttons[button].boxColour = [255,0,0]
+											quitButton = False
+										else:
+											buttons[button].boxColour = [0,255,0]
+											quitButton = True
+
+										
+										
+						pygame.display.update()
+						fpsClock.tick(FPS)
+					Menu()
+				elif clicked == 'Exit':
+					pygame.quit()
+					sys.exit()
+				elif clicked == 'How To':
+					backPhoto = pygame.image.load('Intsructions.png')
+					for kill in range(len(buttons)):
+						del buttons[0]
+					temp = Button(150,650,125,75,buttonText[0],buttonTextColour[0],buttonBoxColour[0])
+					buttons.append(temp)
+					learning = True
+					while learning:
+                                                
+						DISPLAYSURF.blit(backPhoto,(0,0))
+						
+						for button in range(len(buttons)):
+								buttons[button].display()
+				
+						for event in pygame.event.get():
+							if event.type == QUIT:
+								pygame.quit()
+								sys.exit()
+							if event.type == MOUSEBUTTONDOWN:
+								mousex, mousey = event.pos
+								for button in range(len(buttons)):
+									if buttons[button].clicked(mousex,mousey) == 'Done':
+										learning = False
+										for kill in range(len(buttons)):
+											del buttons[0]
+										
+						pygame.display.update()
+						fpsClock.tick(FPS)
+					Menu()
+						
+				elif clicked == 'Credits':
+					backPhoto = pygame.image.load('Credits.png')
+					backPhoto = pygame.transform.scale(backPhoto,(1000,700))
+					for kill in range(len(buttons)):
+						del buttons[0]
+					temp = Button(150,650,125,75,buttonText[0],buttonTextColour[0],buttonBoxColour[0])
+					buttons.append(temp)
+					learning = True
+					while learning:
+                                                
+						DISPLAYSURF.blit(backPhoto,(0,0))
+						
+						for button in range(len(buttons)):
+								buttons[button].display()
+				
+						for event in pygame.event.get():
+							if event.type == QUIT:
+								pygame.quit()
+								sys.exit()
+							if event.type == MOUSEBUTTONDOWN:
+								mousex, mousey = event.pos
+								for button in range(len(buttons)):
+									if buttons[button].clicked(mousex,mousey) == 'Done':
+										learning = False
+										for kill in range(len(buttons)):
+											del buttons[0]
+										
+						pygame.display.update()
+						fpsClock.tick(FPS)
+					Menu()
+					
+				elif clicked == 'Play':
+					for kill in range(len(buttons)):
+						del buttons[0]
+					setAttacks()
+					makeDeck()
+					if checkValues()==True:
+						clear(3)
+						finalNames = typeNames()
+						for players in range(numberOfPlayers):
+							temp = Player(numberOfMoves,handSize,masterDeck,150+(700*players),finalNames[players])	
+							playerList.append(temp)
+                                            
+                                                
+					#input-------------------------------------------------------------------------------------------------
+						matches = 0
+						while len(playerList[0].deck)>0 and len(playerList[1].deck)>0:
+							matches +=1
+							clear(10)
+							for player in range(len(playerList)):             
+								playerList[player].makeHand()
+								#playerList[player].info()
+								playerList[player].planMoves(player)
+							
+								if numberOfPlayers > 2:
+									playerList[player].planTarget(playerList)
+								else:
+									playerList[1].target = [0]*numberOfMoves
+									playerList[0].target = [1]*numberOfMoves
+	                                                        
+	                                                                
+							print('match ' + str(matches)+ ' ===================')
+							for players in range(numberOfPlayers):
+								print(playerList[players].name + ' is at '+ str((len(playerList[players].deck))*intensity))
+							animate()
+	                                                
+						#end+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+						for players in range(numberOfPlayers):
+							print(playerList[players].name, len(playerList[players].deck),sep=(' - '),end=('................'+"\n"))	
+						for players in range(numberOfPlayers):
+							if len(playerList[players].deck) == 0:
+								print(playerList[players].name + 'loses')
+						for kill in range(len(playerList)):
+							del playerList[0]
+						Menu()
+					else:
+						print('Some values in your game are corrupted')
+						Menu()
+	pygame.display.update()
+	fpsClock.tick(FPS)
 	
