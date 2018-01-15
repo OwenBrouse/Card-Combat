@@ -1464,6 +1464,9 @@ while True:
 								print(playerList[players].name + 'loses')
 						for kill in range(len(playerList)):
 							del playerList[0]
+						for kill in range(len(odds)):
+							del odds[0]
+							
 						Menu()
 					else:
 						print('Some values in your game are corrupted')
