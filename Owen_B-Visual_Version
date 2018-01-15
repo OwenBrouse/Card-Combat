@@ -1466,6 +1466,8 @@ while True:
 							del playerList[0]
 						for kill in range(len(odds)):
 							del odds[0]
+						for kill in range(len(masterDeck)):
+							del masterDeck[0]
 							
 						Menu()
 					else:
